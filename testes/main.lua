@@ -382,6 +382,24 @@ prepfile("a = [[b\nc\nd\ne]]\na")
 RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i -- < %s > %s]], prog, out)
 checkprogout("b\nc\nd\ne\n\n")
 
+-- test that multi-line expressions work through continuation lines
+-- (not only when recalled from history as a single buffer)
+
+-- multi-line long string used in an expression
+prepfile('[[\ntest\n]] == "test\\n"\n')
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("true\n")
+
+-- multi-line parenthesized arithmetic expression
+prepfile("(\n1 +\n2 +\n3\n)\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("6\n")
+
+-- genuinely invalid multi-line input should still error
+prepfile("(\n1 +\n)\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s 2>&1]], prog, out)
+assert(string.find(getoutput(), "near"))
+
 -- input interrupted in continuation line
 prepfile("a.\n")
 RUN([[lua -i < %s > /dev/null 2> %s]], prog, out)
