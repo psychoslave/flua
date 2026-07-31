@@ -666,6 +666,21 @@ static int loadline (lua_State *L) {
     return -1;  /* no input */
   if ((status = addreturn(L)) != LUA_OK)  /* 'return ...' did not work? */
     status = multiline(L);  /* try as command, maybe with continuation lines */
+  if (status != LUA_OK) {
+    /* Multiline assembled a complete buffer that failed as a statement.
+       Retry as an expression, so that multi-line expressions behave the
+       same way as single-line ones or history-recalled ones. */
+    lua_pop(L, 1);  /* remove error message; stack: [1]=assembled line */
+    if (addreturn(L) == LUA_OK)
+      status = LUA_OK;  /* stack: [1]=line, [2]=compiled function */
+    else {
+      /* Still not valid; regenerate the statement error for reporting. */
+      size_t len;
+      const char *s = lua_tolstring(L, 1, &len);
+      status = luaL_loadbufferx(L, s, len, "=stdin", "t");
+      /* stack: [1]=line, [2]=error message */
+    }
+  }
   line = lua_tostring(L, 1);
   if (line[0] != '\0')  /* non empty? */
     lua_saveline(line);  /* keep history */
