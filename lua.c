@@ -122,6 +122,7 @@ static void print_usage (lua_State *L, const char *badoption) {
     "  -l g=mod  require library 'mod' into global 'g'\n"
     "  -v        show version information\n"
     "  -E        ignore environment variables\n"
+    "  -P        plain locale mode (no native fallback aliases)\n"
     "  -W        turn warnings on\n"
     "  --        stop handling options\n"
     "  -         stop handling options and execute stdin\n");
@@ -312,6 +313,7 @@ static int handle_script (lua_State *L, char **argv) {
 #define has_v		4	/* -v */
 #define has_e		8	/* -e */
 #define has_E		16	/* -E */
+#define has_P		32	/* -P */
 
 
 /*
@@ -349,6 +351,11 @@ static int collectargs (char **argv, int *first) {
         if (argv[i][2] != '\0')  /* extra characters? */
           return has_error;  /* invalid option */
         args |= has_E;
+        break;
+      case 'P':
+        if (argv[i][2] != '\0')  /* extra characters? */
+          return has_error;  /* invalid option */
+        args |= has_P;
         break;
       case 'W':
         if (argv[i][2] != '\0')  /* extra characters? */
@@ -852,12 +859,14 @@ static int pmain (lua_State *L) {
   }
   else
     l_getenv = &getenv;
+  lua_pushboolean(L, (args & has_P) ? 1 : 0);
+  lua_setfield(L, LUA_REGISTRYINDEX, "LUA_PLAINLOCALE");
+  if (handle_lualocale(L) != LUA_OK)  /* load locale from LUA_LOCALE */
+    return 0;
   luai_openlibs(L);  /* open standard libraries */
   createargtable(L, argv, argc, script);  /* create table 'arg' */
   lua_gc(L, LUA_GCRESTART);  /* start GC... */
   lua_gc(L, LUA_GCGEN);  /* ...in generational mode */
-  if (handle_lualocale(L) != LUA_OK)  /* load locale from LUA_LOCALE */
-    return 0;
   if (handle_luainit(L) != LUA_OK)  /* run LUA_INIT */
     return 0;  /* error running LUA_INIT */
   if (!runargs(L, argv, optlim))  /* execute arguments -e, -l, and -W */

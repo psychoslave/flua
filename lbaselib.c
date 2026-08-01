@@ -21,6 +21,38 @@
 #include "lualib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
+
+static int plain_locale_mode (lua_State *L) {
+  int plain = 0;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_PLAINLOCALE") == LUA_TBOOLEAN)
+    plain = lua_toboolean(L, -1);
+  lua_settop(L, top);
+  return plain;
+}
+
+
+static const char *locale_global_name (lua_State *L) {
+  return locale_get(L, "internals", "global·table·identifier", LUA_GNAME);
+}
+
 
 static int luaB_print (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
@@ -531,22 +563,26 @@ static const luaL_Reg base_funcs[] = {
   {"type", luaB_type},
   {"xpcall", luaB_xpcall},
   /* placeholders */
-  {LUA_GNAME, NULL},
   {"_VERSION", NULL},
   {NULL, NULL}
 };
 
 
 LUAMOD_API int luaopen_base (lua_State *L) {
+  const char *gname = locale_global_name(L);
+  int plain = plain_locale_mode(L);
   /* open lib into global table */
   lua_pushglobaltable(L);
   luaL_setfuncs(L, base_funcs, 0);
-  /* set global _G */
+  /* set localized global-table alias */
   lua_pushvalue(L, -1);
-  lua_setfield(L, -2, LUA_GNAME);
+  lua_setfield(L, -2, gname);
+  if (!plain && strcmp(gname, LUA_GNAME) != 0) {
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -2, LUA_GNAME);
+  }
   /* set global _VERSION */
   lua_pushliteral(L, LUA_VERSION);
   lua_setfield(L, -2, "_VERSION");
   return 1;
 }
-

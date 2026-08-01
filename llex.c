@@ -54,6 +54,18 @@ static const char *const luaX_default_tokens[] = {
 
 static const char *luaX_tokens[cast_uint(TK_STRING - FIRST_RESERVED + 1)];
 
+typedef struct LocaleOp {
+  const char *bytes;
+  size_t len;
+  int token;
+} LocaleOp;
+
+static LocaleOp locale_ops[32];
+static int locale_ops_n = 0;
+static LocaleOp blocked_native_ops[32];
+static int blocked_native_ops_n = 0;
+static int plain_locale_mode = 0;
+
 
 static const char *locale_get (lua_State *L,
                                const char *section,
@@ -70,6 +82,45 @@ static const char *locale_get (lua_State *L,
   }
   lua_settop(L, top);
   return out;
+}
+
+static int locale_plain_mode (lua_State *L) {
+  int plain = 0;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_PLAINLOCALE") == LUA_TBOOLEAN)
+    plain = lua_toboolean(L, -1);
+  lua_settop(L, top);
+  return plain;
+}
+
+static void add_blocked_native_op (const char *bytes) {
+  int i;
+  size_t len = strlen(bytes);
+  for (i = 0; i < blocked_native_ops_n; i++) {
+    if (blocked_native_ops[i].len == len &&
+        memcmp(blocked_native_ops[i].bytes, bytes, len) == 0)
+      return;
+  }
+  lua_assert(blocked_native_ops_n <
+             cast_int(sizeof(blocked_native_ops) / sizeof(blocked_native_ops[0])));
+  blocked_native_ops[blocked_native_ops_n].bytes = bytes;
+  blocked_native_ops[blocked_native_ops_n].len = len;
+  blocked_native_ops[blocked_native_ops_n].token = 0;
+  blocked_native_ops_n++;
+}
+
+static void add_locale_op (lua_State *L, const char *key,
+                           const char *fallback, int token) {
+  const char *s = locale_get(L, "operators", key, fallback);
+  if (s[0] != '\0' && strcmp(s, fallback) != 0) {
+    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
+    locale_ops[locale_ops_n].bytes = s;
+    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].token = token;
+    locale_ops_n++;
+    if (plain_locale_mode)
+      add_blocked_native_op(fallback);
+  }
 }
 
 
@@ -112,6 +163,7 @@ void luaX_setlocale (lua_State *L) {
     "label·delimiter",
   };
   int i;
+  plain_locale_mode = locale_plain_mode(L);
   for (i = 0; i <= cast_int(TK_STRING - FIRST_RESERVED); i++)
     luaX_tokens[i] = luaX_default_tokens[i];
   for (i = 0; i < NUM_RESERVED; i++) {
@@ -125,6 +177,33 @@ void luaX_setlocale (lua_State *L) {
   luaX_tokens[cast_int(TK_EOS - FIRST_RESERVED)] =
     locale_get(L, "repl", "incomplete·input·marker",
                luaX_tokens[cast_int(TK_EOS - FIRST_RESERVED)]);
+  locale_ops_n = 0;
+  blocked_native_ops_n = 0;
+  add_locale_op(L, "variadic·expansion", "...", TK_DOTS);
+  add_locale_op(L, "concatenation·operator", "..", TK_CONCAT);
+  add_locale_op(L, "label·delimiter", "::", TK_DBCOLON);
+  add_locale_op(L, "equality·comparison", "==", TK_EQ);
+  add_locale_op(L, "inequality·comparison", "~=", TK_NE);
+  add_locale_op(L, "inferior·ordering·comparison", "<=", TK_LE);
+  add_locale_op(L, "superior·ordering·comparison", ">=", TK_GE);
+  add_locale_op(L, "ascending·significance·shift", "<<", TK_SHL);
+  add_locale_op(L, "descending·significance·shift", ">>", TK_SHR);
+  add_locale_op(L, "integer·division·operator", "//", TK_IDIV);
+  add_locale_op(L, "assignment·operator", "=", '=');
+  add_locale_op(L, "strict·inferior·ordering", "<", '<');
+  add_locale_op(L, "strict·superior·ordering", ">", '>');
+  add_locale_op(L, "addition·operator", "+", '+');
+  add_locale_op(L, "subtraction·operator", "-", '-');
+  add_locale_op(L, "multiplication·operator", "*", '*');
+  add_locale_op(L, "division·operator", "/", '/');
+  add_locale_op(L, "modulo·operator", "%", '%');
+  add_locale_op(L, "exponentiation·operator", "^", '^');
+  add_locale_op(L, "cardinality·operator", "#", '#');
+  add_locale_op(L, "bitwise·conjunction", "&", '&');
+  add_locale_op(L, "bitwise·disjunction", "|", '|');
+  add_locale_op(L, "bitwise·exclusive·disjunction", "~", '~');
+  add_locale_op(L, "field·access·operator", ".", '.');
+  add_locale_op(L, "method·invocation·operator", ":", ':');
 }
 
 
@@ -301,6 +380,50 @@ static int check_next1 (LexState *ls, int c) {
     return 1;
   }
   else return 0;
+}
+
+static int try_locale_operator (LexState *ls) {
+  int i, besttok = 0;
+  size_t bestlen = 0;
+  if (ls->current == EOZ)
+    return 0;
+  for (i = 0; i < locale_ops_n; i++) {
+    const LocaleOp *op = &locale_ops[i];
+    if (cast_uchar(op->bytes[0]) != ls->current)
+      continue;
+    if ((op->len == 1 ||
+         (ls->z->n >= op->len - 1 &&
+          memcmp(ls->z->p, op->bytes + 1, op->len - 1) == 0)) &&
+        op->len > bestlen) {
+      bestlen = op->len;
+      besttok = op->token;
+    }
+  }
+  if (besttok != 0) {
+    for (i = 0; i < cast_int(bestlen); i++)
+      next(ls);
+    return besttok;
+  }
+  return 0;
+}
+
+static int is_blocked_native_operator (LexState *ls) {
+  int i;
+  size_t bestlen = 0;
+  if (!plain_locale_mode || ls->current == EOZ)
+    return 0;
+  for (i = 0; i < blocked_native_ops_n; i++) {
+    const LocaleOp *op = &blocked_native_ops[i];
+    if (cast_uchar(op->bytes[0]) != ls->current)
+      continue;
+    if ((op->len == 1 ||
+         (ls->z->n >= op->len - 1 &&
+          memcmp(ls->z->p, op->bytes + 1, op->len - 1) == 0)) &&
+        op->len > bestlen) {
+      bestlen = op->len;
+    }
+  }
+  return (bestlen > 0);
 }
 
 
@@ -580,6 +703,13 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
+    if (is_blocked_native_operator(ls))
+      lexerror(ls, locale_get(ls->L, "diagnostics",
+                              "unexpected·symbol", "unexpected symbol"),
+               ls->current);
+    int lop = try_locale_operator(ls);
+    if (lop != 0)
+      return lop;
     switch (ls->current) {
       case '\n': case '\r': {  /* line breaks */
         inclinenumber(ls);

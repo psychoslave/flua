@@ -44,6 +44,10 @@ static const char *locale_get (lua_State *L,
   return out;
 }
 
+static const char *locale_global_name (lua_State *L) {
+  return locale_get(L, "internals", "global·table·identifier", LUA_GNAME);
+}
+
 
 /*
 ** {======================================================
@@ -90,13 +94,20 @@ static int findfield (lua_State *L, int objidx, int level) {
 */
 static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   int top = lua_gettop(L);
+  const char *gname = locale_global_name(L);
+  size_t glen = strlen(gname);
   lua_getinfo(L, "f", ar);  /* push function */
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
   luaL_checkstack(L, 6, "not enough stack");  /* slots for 'findfield' */
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
-    if (strncmp(name, LUA_GNAME ".", 3) == 0) {  /* name start with '_G.'? */
-      lua_pushstring(L, name + 3);  /* push name without prefix */
+    if (strncmp(name, gname, glen) == 0 && name[glen] == '.') {
+      lua_pushstring(L, name + glen + 1);  /* name without localized prefix */
+      lua_remove(L, -2);  /* remove original name */
+    }
+    else if (strcmp(gname, LUA_GNAME) != 0 &&
+             strncmp(name, LUA_GNAME ".", 3) == 0) {
+      lua_pushstring(L, name + 3);  /* name without native fallback prefix */
       lua_remove(L, -2);  /* remove original name */
     }
     lua_copy(L, -1, top + 1);  /* copy name to proper place */
@@ -190,25 +201,30 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
 LUALIB_API int luaL_argerror (lua_State *L, int arg, const char *extramsg) {
   lua_Debug ar;
   const char *argword;
+  const char *badargfmt = locale_get(L, "diagnostics",
+    "bad·argument", "bad argument #%d (%s)");
   if (!lua_getstack(L, 0, &ar))  /* no stack frame? */
-    return luaL_error(L, "bad argument #%d (%s)", arg, extramsg);
+    return luaL_error(L, badargfmt, arg, extramsg);
   lua_getinfo(L, "nt", &ar);
   if (arg <= ar.extraargs)  /* error in an extra argument? */
-    argword =  "extra argument";
+    argword = locale_get(L, "diagnostics",
+                        "extra·argument", "extra argument");
   else {
     arg -= ar.extraargs;  /* do not count extra arguments */
     if (strcmp(ar.namewhat, "method") == 0) {  /* colon syntax? */
       arg--;  /* do not count (extra) self argument */
       if (arg == 0)  /* error in self argument? */
-        return luaL_error(L, "calling '%s' on bad self (%s)",
-                               ar.name, extramsg);
+        return luaL_error(L, locale_get(L, "diagnostics",
+          "calling·on·bad·self", "calling '%s' on bad self (%s)"),
+                              ar.name, extramsg);
       /* else go through; error in a regular argument */
     }
-    argword = "argument";
+    argword = locale_get(L, "diagnostics", "argument", "argument");
   }
   if (ar.name == NULL)
     ar.name = (pushglobalfuncname(L, &ar)) ? lua_tostring(L, -1) : "?";
-  return luaL_error(L, "bad %s #%d to '%s' (%s)",
+  return luaL_error(L, locale_get(L, "diagnostics",
+    "bad·named·argument·to", "bad %s #%d to '%s' (%s)"),
                        argword, arg, ar.name, extramsg);
 }
 
@@ -219,10 +235,12 @@ LUALIB_API int luaL_typeerror (lua_State *L, int arg, const char *tname) {
   if (luaL_getmetafield(L, arg, "__name") == LUA_TSTRING)
     typearg = lua_tostring(L, -1);  /* use the given type name */
   else if (lua_type(L, arg) == LUA_TLIGHTUSERDATA)
-    typearg = "light userdata";  /* special name for messages */
+    typearg = locale_get(L, "diagnostics",
+                         "light·userdata·type·name", "light userdata");
   else
     typearg = luaL_typename(L, arg);  /* standard name */
-  msg = lua_pushfstring(L, "%s expected, got %s", tname, typearg);
+  msg = lua_pushfstring(L, locale_get(L, "diagnostics",
+    "type·expected·got", "%s expected, got %s"), tname, typearg);
   return luaL_argerror(L, arg, msg);
 }
 
@@ -395,7 +413,8 @@ LUALIB_API int luaL_checkoption (lua_State *L, int arg, const char *def,
     if (strcmp(lst[i], name) == 0)
       return i;
   return luaL_argerror(L, arg,
-                       lua_pushfstring(L, "invalid option '%s'", name));
+                       lua_pushfstring(L, locale_get(L, "diagnostics",
+                         "invalid·option", "invalid option '%s'"), name));
 }
 
 
@@ -409,9 +428,11 @@ LUALIB_API int luaL_checkoption (lua_State *L, int arg, const char *def,
 LUALIB_API void luaL_checkstack (lua_State *L, int space, const char *msg) {
   if (l_unlikely(!lua_checkstack(L, space))) {
     if (msg)
-      luaL_error(L, "stack overflow (%s)", msg);
+      luaL_error(L, locale_get(L, "diagnostics",
+        "stack·overflow·with·context", "stack overflow (%s)"), msg);
     else
-      luaL_error(L, "stack overflow");
+      luaL_error(L, locale_get(L, "diagnostics",
+        "stack·overflow", "stack overflow"));
   }
 }
 
@@ -424,7 +445,8 @@ LUALIB_API void luaL_checktype (lua_State *L, int arg, int t) {
 
 LUALIB_API void luaL_checkany (lua_State *L, int arg) {
   if (l_unlikely(lua_type(L, arg) == LUA_TNONE))
-    luaL_argerror(L, arg, "value expected");
+    luaL_argerror(L, arg, locale_get(L, "diagnostics",
+      "value·expected", "value expected"));
 }
 
 
@@ -513,7 +535,8 @@ static void *resizebox (lua_State *L, int idx, size_t newsize) {
     lua_Alloc allocf = lua_getallocf(L, &ud);
     void *temp = allocf(ud, box->box, box->bsize, newsize);
     if (l_unlikely(temp == NULL && newsize > 0)) {  /* allocation error? */
-      lua_pushliteral(L, "not enough memory");
+      lua_pushstring(L, locale_get(L, "diagnostics",
+        "not·enough·memory", "not enough memory"));
       lua_error(L);  /* raise a memory error */
     }
     box->box = temp;
@@ -582,7 +605,9 @@ static void newbox (lua_State *L) {
 static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
   size_t newsize = B->size;
   if (l_unlikely(sz >= MAX_SIZE - B->n))
-    return cast_sizet(luaL_error(B->L, "resulting string too large"));
+    return cast_sizet(luaL_error(B->L, "%s",
+      locale_get(B->L, "diagnostics",
+        "resulting·string·too·large", "resulting string too large")));
   /* else  B->n + sz + 1 <= MAX_SIZE */
   if (newsize <= MAX_SIZE/3 * 2)  /* no overflow? */
     newsize += (newsize >> 1);  /* new size *= 1.5 */
@@ -953,7 +978,8 @@ LUALIB_API lua_Integer luaL_len (lua_State *L, int idx) {
   lua_len(L, idx);
   l = lua_tointegerx(L, -1, &isnum);
   if (l_unlikely(!isnum))
-    luaL_error(L, "object length is not an integer");
+    luaL_error(L, "%s", locale_get(L, "diagnostics",
+      "object·length·not·integer", "object length is not an integer"));
   lua_pop(L, 1);  /* remove object */
   return l;
 }
@@ -963,7 +989,9 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
   idx = lua_absindex(L,idx);
   if (luaL_callmeta(L, idx, "__tostring")) {  /* metafield? */
     if (!lua_isstring(L, -1))
-      luaL_error(L, "'__tostring' must return a string");
+      luaL_error(L, "%s", locale_get(L, "diagnostics",
+        "metamethod·tostring·must·return·string",
+        "'__tostring' must return a string"));
   }
   else {
     switch (lua_type(L, idx)) {
@@ -1235,8 +1263,12 @@ LUALIB_API lua_State *(luaL_newstate) (void) {
 LUALIB_API void luaL_checkversion_ (lua_State *L, lua_Number ver, size_t sz) {
   lua_Number v = lua_version(L);
   if (sz != LUAL_NUMSIZES)  /* check numeric types */
-    luaL_error(L, "core and library have incompatible numeric types");
+    luaL_error(L, "%s", locale_get(L, "diagnostics",
+      "core·library·numeric·types·incompatible",
+      "core and library have incompatible numeric types"));
   else if (v != ver)
-    luaL_error(L, "version mismatch: app. needs %f, Lua core provides %f",
+    luaL_error(L, locale_get(L, "diagnostics",
+      "version·mismatch·app·needs·core·provides",
+      "version mismatch: app. needs %f, Lua core provides %f"),
                   (LUAI_UACNUMBER)ver, (LUAI_UACNUMBER)v);
 }
