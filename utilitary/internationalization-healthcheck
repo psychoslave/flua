@@ -1,92 +1,153 @@
-#!/usr/bin/env python3
-import os
-import subprocess
-import sys
-from pathlib import Path
+#!/usr/bin/env -S ./lua
 
+local function shq(s)
+  return "'" .. tostring(s):gsub("'", [['"'"']]) .. "'"
+end
 
-ROOT = Path(__file__).resolve().parents[1]
+local function rstrip(s)
+  return (s:gsub("%s+$", ""))
+end
 
+local function dirname(path)
+  local d = path:match("^(.*)/[^/]+$")
+  return d or "."
+end
 
-def run(label, cmd, *, cwd=ROOT, env=None, timeout=180):
-    print(f"\n== {label} ==")
-    try:
-        cp = subprocess.run(
-            cmd,
-            cwd=str(cwd),
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired:
-        print(f"TIMEOUT after {timeout}s")
-        return 124
-    if cp.stdout:
-        print(cp.stdout.rstrip())
-    if cp.returncode != 0 and cp.stderr:
-        print(cp.stderr.rstrip(), file=sys.stderr)
-    return cp.returncode
+local function detect_root()
+  local script = arg[0] or "utilitary/internationalization-healthcheck"
+  local cmd = "cd " .. shq(dirname(script) .. "/..") .. " && pwd"
+  local p = assert(io.popen(cmd, "r"))
+  local out = p:read("*a")
+  p:close()
+  out = rstrip(out)
+  return (out ~= "" and out) or "."
+end
 
+local ROOT = detect_root()
 
-def main():
-    build_cmd = [
-        "make",
-        "MYCFLAGS=-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB=\"\\\"/opt/homebrew/opt/readline/lib/libreadline.dylib\\\"\"",
-        "MYLDFLAGS=",
-        "MYLIBS=",
-        "CC=cc",
-    ]
-    if run("Build", build_cmd, timeout=300) != 0:
-        return 1
+local function detect_timeout_bin()
+  local p = assert(io.popen("command -v timeout || command -v gtimeout || true", "r"))
+  local out = rstrip(p:read("*a"))
+  p:close()
+  if out == "" then
+    io.stderr:write("timeout command not found (need 'timeout' or 'gtimeout')\n")
+    os.exit(1)
+  end
+  return out
+end
 
-    if run(
-        "Build testes/libs",
-        ["make", "-C", "testes/libs", "CFLAGS=-Wall -O2 -I../../ -fPIC -shared -undefined dynamic_lookup"],
-        timeout=180,
-    ) != 0:
-        return 1
+local TIMEOUT_BIN = detect_timeout_bin()
 
-    clean_env = {
-        "PATH": os.environ.get("PATH", ""),
-        "HOME": os.environ.get("HOME", ""),
-        "TERM": os.environ.get("TERM", ""),
-    }
-    if run("Run testes/main.lua", ["../lua", "main.lua"], cwd=ROOT / "testes", env=clean_env, timeout=180) != 0:
-        return 1
+local function run(label, command, timeout)
+  print("\n== " .. label .. " ==")
+  local wrapped = string.format("%s %ss sh -c %s 2>&1",
+                                TIMEOUT_BIN, tostring(timeout), shq(command))
+  local p = assert(io.popen(wrapped, "r"))
+  local output = p:read("*a")
+  local ok, how, code = p:close()
+  if output ~= "" then
+    print(rstrip(output))
+  end
+  if ok then
+    return 0, output
+  end
+  if how == "exit" and code == 124 then
+    print("TIMEOUT after " .. timeout .. "s")
+    return 124, output
+  end
+  return (how == "exit" and code) or 1, output
+end
 
-    if run("Smoke no locale", ["./lua", "-e", "print('no-locale-ok')"], timeout=20) != 0:
-        return 1
+local function in_root(command)
+  return "cd " .. shq(ROOT) .. " && " .. command
+end
 
-    native_env = dict(os.environ)
-    native_env["LUA_LOCALE"] = "native"
-    if run("Smoke LUA_LOCALE=native", ["./lua", "-e", "print('native-locale-ok')"], env=native_env, timeout=20) != 0:
-        return 1
+local function must_run(label, command, timeout)
+  local rc = run(label, in_root(command), timeout)
+  return rc == 0
+end
 
-    missing_env = dict(os.environ)
-    missing_env["LUA_LOCALE"] = "does-not-exist"
-    print("\n== Smoke missing locale fallback ==")
-    cp = subprocess.run(
-        ["./lua", "-e", "print('missing-locale-fallback-ok')"],
-        cwd=str(ROOT),
-        env=missing_env,
-        capture_output=True,
-        text=True,
-        timeout=20,
-    )
-    if cp.stdout:
-        print(cp.stdout.rstrip())
-    if cp.stderr:
-        print(cp.stderr.rstrip(), file=sys.stderr)
-    if cp.returncode != 0:
-        return 1
-    if "failed to load locale" not in cp.stderr:
-        print("expected missing-locale warning not found", file=sys.stderr)
-        return 1
+local function main()
+  local path = os.getenv("PATH") or ""
+  local home = os.getenv("HOME") or ""
+  local term = os.getenv("TERM") or ""
 
-    print("\nHealthcheck OK")
-    return 0
+  if not must_run(
+      "Build",
+      "make MYCFLAGS=" ..
+      shq('-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB="\\"/opt/homebrew/opt/readline/lib/libreadline.dylib\\""') ..
+      " MYLDFLAGS='' MYLIBS='' CC=cc",
+      300) then
+    return 1
+  end
 
+  if not must_run(
+      "Build testes/libs",
+      "make -C testes/libs " ..
+      "CFLAGS=" .. shq("-Wall -O2 -I../../ -fPIC -shared -undefined dynamic_lookup"),
+      180) then
+    return 1
+  end
 
-if __name__ == "__main__":
-    raise SystemExit(main())
+  if not must_run(
+      "Run testes/main.lua",
+      "cd testes && env -i PATH=" .. shq(path) .. " HOME=" .. shq(home) .. " TERM=" .. shq(term) ..
+      " ../lua main.lua",
+      180) then
+    return 1
+  end
+
+  if not must_run("Smoke no locale", [[./lua -e "print('no-locale-ok')"]], 20) then
+    return 1
+  end
+
+  if not must_run("Smoke LUA_LOCALE=native", [[LUA_LOCALE='native' ./lua -e "print('native-locale-ok')"]], 20) then
+    return 1
+  end
+
+  if not must_run(
+      "Test symbolic locale default mode",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua testes/symbolic-locale.lua default]],
+      20) then
+    return 1
+  end
+
+  if not must_run(
+      "Test symbolic locale inline operators",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua -e "x←1;assert(x＝1);print('symbolic-inline-ok')"]],
+      20) then
+    return 1
+  end
+
+  if not must_run(
+      "Test symbolic locale plain mode (-P)",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P testes/symbolic-locale.lua plain]],
+      20) then
+    return 1
+  end
+
+  if not must_run(
+      "Test -P rejects native '='",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P -e "local f,e←load('a=1'); assert(f＝nil and string.find(e, '⚠ (= ∉ Σ) ∧ Γ ⊬ ⟨…◁=▷…⟩', 1, true)); print('plain-reject-ok')"]],
+      20) then
+    return 1
+  end
+
+  local rc, out = run(
+    "Smoke missing locale fallback",
+    in_root([[LUA_LOCALE='does-not-exist' ./lua -e "print('missing-locale-fallback-ok')"]]),
+    20
+  )
+  if rc ~= 0 then
+    return 1
+  end
+  if not out:find("failed to load locale", 1, true) then
+    io.stderr:write("expected missing-locale warning not found\n")
+    return 1
+  end
+
+  print("\nHealthcheck OK")
+  return 0
+end
+
+os.exit(main())

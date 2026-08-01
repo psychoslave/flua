@@ -20,6 +20,28 @@
 #include "lauxlib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
+
+static const char *locale_global_name (lua_State *L) {
+  return locale_get(L, "internals", "global·table·identifier", LUA_GNAME);
+}
+
 
 /*
 ** Standard Libraries. (Must be listed in the same ORDER of their
@@ -48,16 +70,16 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   const luaL_Reg *lib;
   luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
   for (lib = stdlibs, mask = 1; lib->name != NULL; lib++, mask <<= 1) {
+    const char *name = (mask == LUA_GLIBK) ? locale_global_name(L) : lib->name;
     if (load & mask) {  /* selected? */
-      luaL_requiref(L, lib->name, lib->func, 1);  /* require library */
+      luaL_requiref(L, name, lib->func, 1);  /* require library */
       lua_pop(L, 1);  /* remove result from the stack */
     }
     else if (preload & mask) {  /* selected? */
       lua_pushcfunction(L, lib->func);
-      lua_setfield(L, -2, lib->name);  /* add library to PRELOAD table */
+      lua_setfield(L, -2, name);  /* add library to PRELOAD table */
     }
   }
   lua_assert((mask >> 1) == LUA_UTF8LIBK);
   lua_pop(L, 1);  /* remove PRELOAD table */
 }
-

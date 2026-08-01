@@ -88,6 +88,7 @@ return {
       "  -l g=mod  require library 'mod' into global 'g'\n" ..
       "  -v        show version information\n" ..
       "  -E        ignore environment variables\n" ..
+      "  -P        plain locale mode (no native fallback aliases)\n" ..
       "  -W        turn warnings on\n" ..
       "  --        stop handling options\n" ..
       "  -         stop handling options and execute stdin\n",
@@ -149,10 +150,30 @@ return {
     ["missing·closing·brace"] = "missing '}'",
     ["utf8·value·too·large"] = "UTF-8 value too large",
     ["decimal·escape·too·large"] = "decimal escape too large",
+    ["bad·argument"] = "bad argument #%d (%s)",
+    ["extra·argument"] = "extra argument",
+    ["calling·on·bad·self"] = "calling '%s' on bad self (%s)",
+    ["argument"] = "argument",
+    ["bad·named·argument·to"] = "bad %s #%d to '%s' (%s)",
+    ["light·userdata·type·name"] = "light userdata",
+    ["type·expected·got"] = "%s expected, got %s",
+    ["invalid·option"] = "invalid option '%s'",
+    ["stack·overflow·with·context"] = "stack overflow (%s)",
+    ["stack·overflow"] = "stack overflow",
+    ["value·expected"] = "value expected",
+    ["not·enough·memory"] = "not enough memory",
+    ["resulting·string·too·large"] = "resulting string too large",
+    ["object·length·not·integer"] = "object length is not an integer",
+    ["metamethod·tostring·must·return·string"] = "'__tostring' must return a string",
+    ["core·library·numeric·types·incompatible"] =
+      "core and library have incompatible numeric types",
+    ["version·mismatch·app·needs·core·provides"] =
+      "version mismatch: app. needs %f, Lua core provides %f",
   },
 
   internals = {
     ["environment·identifier"] = "_ENV",
+    ["global·table·identifier"] = "_G",
     ["implicit·self·parameter"] = "self",
   },
 }
