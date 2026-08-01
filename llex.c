@@ -464,14 +464,20 @@ static l_uint32 readutf8esc (LexState *ls) {
   l_uint32 r;
   int i = 4;  /* number of chars to be removed: start with #"\u{X" */
   save_and_next(ls);  /* skip 'u' */
-  esccheck(ls, ls->current == '{', "missing '{'");
+  esccheck(ls, ls->current == '{',
+              locale_get(ls->L, "diagnostics",
+                         "missing·opening·brace", "missing '{'"));
   r = cast_uint(gethexa(ls));  /* must have at least one digit */
   while (cast_void(save_and_next(ls)), lisxdigit(ls->current)) {
     i++;
-    esccheck(ls, r <= (0x7FFFFFFFu >> 4), "UTF-8 value too large");
+    esccheck(ls, r <= (0x7FFFFFFFu >> 4),
+                locale_get(ls->L, "diagnostics",
+                           "utf8·value·too·large", "UTF-8 value too large"));
     r = (r << 4) + luaO_hexavalue(ls->current);
   }
-  esccheck(ls, ls->current == '}', "missing '}'");
+  esccheck(ls, ls->current == '}',
+              locale_get(ls->L, "diagnostics",
+                         "missing·closing·brace", "missing '}'"));
   next(ls);  /* skip '}' */
   luaZ_buffremove(ls->buff, i);  /* remove saved chars from buffer */
   return r;
@@ -493,7 +499,9 @@ static int readdecesc (LexState *ls) {
     r = 10*r + ls->current - '0';
     save_and_next(ls);
   }
-  esccheck(ls, r <= UCHAR_MAX, "decimal escape too large");
+  esccheck(ls, r <= UCHAR_MAX,
+              locale_get(ls->L, "diagnostics",
+                         "decimal·escape·too·large", "decimal escape too large"));
   luaZ_buffremove(ls->buff, i);  /* remove read digits from buffer */
   return r;
 }
