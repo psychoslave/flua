@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def run(label, cmd, *, cwd=ROOT, env=None, timeout=180):
+    print(f"\n== {label} ==")
+    try:
+        cp = subprocess.run(
+            cmd,
+            cwd=str(cwd),
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        print(f"TIMEOUT after {timeout}s")
+        return 124
+    if cp.stdout:
+        print(cp.stdout.rstrip())
+    if cp.returncode != 0 and cp.stderr:
+        print(cp.stderr.rstrip(), file=sys.stderr)
+    return cp.returncode
+
+
+def main():
+    build_cmd = [
+        "make",
+        "MYCFLAGS=-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB=\"\\\"/opt/homebrew/opt/readline/lib/libreadline.dylib\\\"\"",
+        "MYLDFLAGS=",
+        "MYLIBS=",
+        "CC=cc",
+    ]
+    if run("Build", build_cmd, timeout=300) != 0:
+        return 1
+
+    if run(
+        "Build testes/libs",
+        ["make", "-C", "testes/libs", "CFLAGS=-Wall -O2 -I../../ -fPIC -shared -undefined dynamic_lookup"],
+        timeout=180,
+    ) != 0:
+        return 1
+
+    clean_env = {
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": os.environ.get("HOME", ""),
+        "TERM": os.environ.get("TERM", ""),
+    }
+    if run("Run testes/main.lua", ["../lua", "main.lua"], cwd=ROOT / "testes", env=clean_env, timeout=180) != 0:
+        return 1
+
+    if run("Smoke no locale", ["./lua", "-e", "print('no-locale-ok')"], timeout=20) != 0:
+        return 1
+
+    native_env = dict(os.environ)
+    native_env["LUA_LOCALE"] = "native"
+    if run("Smoke LUA_LOCALE=native", ["./lua", "-e", "print('native-locale-ok')"], env=native_env, timeout=20) != 0:
+        return 1
+
+    missing_env = dict(os.environ)
+    missing_env["LUA_LOCALE"] = "does-not-exist"
+    print("\n== Smoke missing locale fallback ==")
+    cp = subprocess.run(
+        ["./lua", "-e", "print('missing-locale-fallback-ok')"],
+        cwd=str(ROOT),
+        env=missing_env,
+        capture_output=True,
+        text=True,
+        timeout=20,
+    )
+    if cp.stdout:
+        print(cp.stdout.rstrip())
+    if cp.stderr:
+        print(cp.stderr.rstrip(), file=sys.stderr)
+    if cp.returncode != 0:
+        return 1
+    if "failed to load locale" not in cp.stderr:
+        print("expected missing-locale warning not found", file=sys.stderr)
+        return 1
+
+    print("\nHealthcheck OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

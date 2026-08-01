@@ -127,9 +127,11 @@ static void print_usage (lua_State *L, const char *badoption) {
     "  -         stop handling options and execute stdin\n");
   lua_writestringerror("%s: ", progname);
   if (badoption[1] == 'e' || badoption[1] == 'l')
-    lua_writestringerror("'%s' needs argument\n", badoption);
+    lua_writestringerror(locale_get(L, "diagnostics",
+      "option·needs·argument", "'%s' needs argument\n"), badoption);
   else
-    lua_writestringerror("unrecognized option '%s'\n", badoption);
+    lua_writestringerror(locale_get(L, "diagnostics",
+      "unrecognized·option", "unrecognized option '%s'\n"), badoption);
   lua_writestringerror(usage, progname);
 }
 
@@ -152,7 +154,8 @@ static int report (lua_State *L, int status) {
   if (status != LUA_OK) {
     const char *msg = lua_tostring(L, -1);
     if (msg == NULL)
-      msg = "(error message not a string)";
+      msg = locale_get(L, "diagnostics",
+                       "error·message·not·string", "(error message not a string)");
     l_message(progname, msg);
     lua_pop(L, 1);  /* remove message */
   }
@@ -170,8 +173,10 @@ static int msghandler (lua_State *L) {
         lua_type(L, -1) == LUA_TSTRING)  /* that produces a string? */
       return 1;  /* that is the message */
     else
-      msg = lua_pushfstring(L, "(error object is a %s value)",
-                               luaL_typename(L, 1));
+      msg = lua_pushfstring(L, locale_get(L, "diagnostics",
+                         "error·object·value·type",
+                         "(error object is a %s value)"),
+                            luaL_typename(L, 1));
   }
   luaL_traceback(L, L, msg, 1);  /* append a standard traceback */
   return 1;  /* return the traceback */
@@ -798,8 +803,10 @@ static void l_print (lua_State *L) {
     lua_getglobal(L, "print");
     lua_insert(L, 1);
     if (lua_pcall(L, n, 0, 0) != LUA_OK)
-      l_message(progname, lua_pushfstring(L, "error calling 'print' (%s)",
-                                             lua_tostring(L, -1)));
+      l_message(progname, lua_pushfstring(L,
+        locale_get(L, "diagnostics",
+                   "error·calling·print", "error calling 'print' (%s)"),
+        lua_tostring(L, -1)));
   }
 }
 

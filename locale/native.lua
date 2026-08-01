@@ -121,6 +121,11 @@ return {
     ["execution·interrupted"] = "interrupted!",
     ["memory·exhaustion"] = "cannot create state: not enough memory",
     ["warning·prefix"] = "Lua warning: ",
+    ["option·needs·argument"] = "'%s' needs argument\n",
+    ["unrecognized·option"] = "unrecognized option '%s'\n",
+    ["error·message·not·string"] = "(error message not a string)",
+    ["error·object·value·type"] = "(error object is a %s value)",
+    ["error·calling·print"] = "error calling 'print' (%s)",
     ["interactive·locals·crossline·warning"] =
       "warning: locals do not survive across lines in interactive mode",
     ["name·or·variadic·expansion·expected"] = "<name> or '...' expected",
@@ -131,6 +136,15 @@ return {
     ["multiple·to·be·closed·variables"] = "multiple to-be-closed variables in local list",
     ["global·variables·cannot·be·to·be·closed"] = "global variables cannot be to-be-closed",
     ["argument·table·expected"] = "'arg' is not a table",
+    ["main·function·identity"] = "main function",
+    ["function·at·line"] = "function at line %d",
+    ["too·many·elements·in·scope"] = "too many %s (limit is %d) in %s",
+    ["variadic·expansion·outside·variadic·function"] =
+      "cannot use '...' outside a vararg function",
+    ["missing·opening·brace"] = "missing '{'",
+    ["missing·closing·brace"] = "missing '}'",
+    ["utf8·value·too·large"] = "UTF-8 value too large",
+    ["decimal·escape·too·large"] = "decimal escape too large",
   },
 
   internals = {
