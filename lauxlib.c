@@ -27,6 +27,23 @@
 #include "lauxlib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 
 /*
 ** {======================================================
@@ -97,7 +114,8 @@ static void pushfuncname (lua_State *L, lua_Debug *ar) {
   if (*ar->namewhat != '\0')  /* is there a name from code? */
     lua_pushfstring(L, "%s '%s'", ar->namewhat, ar->name);  /* use it */
   else if (*ar->what == 'm')  /* main? */
-      lua_pushliteral(L, "main chunk");
+      lua_pushstring(L, locale_get(L, "diagnostics",
+                                   "main·chunk·identity", "main chunk"));
   else if (pushglobalfuncname(L, ar)) {  /* try a global name */
     lua_pushfstring(L, "function '%s'", lua_tostring(L, -1));
     lua_remove(L, -2);  /* remove name */
@@ -135,7 +153,8 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
     luaL_addstring(&b, msg);
     luaL_addchar(&b, '\n');
   }
-  luaL_addstring(&b, "stack traceback:");
+  luaL_addstring(&b, locale_get(L, "diagnostics",
+                                "stack·traceback·header", "stack traceback:"));
   while (lua_getstack(L1, level++, &ar)) {
     if (limit2show-- == 0) {  /* too many levels? */
       int n = last - level - LEVELS2 + 1;  /* number of levels to skip */
@@ -1136,7 +1155,8 @@ static void warnfcont (void *ud, const char *message, int tocont) {
 static void warnfon (void *ud, const char *message, int tocont) {
   if (checkcontrol((lua_State *)ud, message, tocont))  /* control message? */
     return;  /* nothing else to be done */
-  lua_writestringerror("%s", "Lua warning: ");  /* start a new warning */
+  lua_writestringerror("%s", locale_get((lua_State *)ud, "diagnostics",
+    "warning·prefix", "Lua warning: "));  /* start a new warning */
   warnfcont(ud, message, tocont);  /* finish processing */
 }
 
@@ -1212,4 +1232,3 @@ LUALIB_API void luaL_checkversion_ (lua_State *L, lua_Number ver, size_t sz) {
     luaL_error(L, "version mismatch: app. needs %f, Lua core provides %f",
                   (LUAI_UACNUMBER)ver, (LUAI_UACNUMBER)v);
 }
-
