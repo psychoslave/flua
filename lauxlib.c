@@ -273,10 +273,14 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
   }
   else {
     const char *msg;
+    const char *nofmt = locale_get(L, "diagnostics",
+      "file·error·no·extra·info", "(no extra info)");
+    const char *pathfmt = locale_get(L, "diagnostics",
+      "file·error·with·path", "%s: %s");
     luaL_pushfail(L);
-    msg = (en != 0) ? strerror(en) : "(no extra info)";
+    msg = (en != 0) ? strerror(en) : nofmt;
     if (fname)
-      lua_pushfstring(L, "%s: %s", fname, msg);
+      lua_pushfstring(L, pathfmt, fname, msg);
     else
       lua_pushstring(L, msg);
     lua_pushinteger(L, en);
@@ -793,10 +797,14 @@ static const char *getF (lua_State *L, void *ud, size_t *size) {
 static int errfile (lua_State *L, const char *what, int fnameindex) {
   int err = errno;
   const char *filename = lua_tostring(L, fnameindex) + 1;
+  const char *fmt_with_reason = locale_get(L, "diagnostics",
+    "cannot·operation·file·with·reason", "cannot %s %s: %s");
+  const char *fmt_plain = locale_get(L, "diagnostics",
+    "cannot·operation·file", "cannot %s %s");
   if (err != 0)
-    lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(err));
+    lua_pushfstring(L, fmt_with_reason, what, filename, strerror(err));
   else
-    lua_pushfstring(L, "cannot %s %s", what, filename);
+    lua_pushfstring(L, fmt_plain, what, filename);
   lua_remove(L, fnameindex);
   return LUA_ERRFILE;
 }

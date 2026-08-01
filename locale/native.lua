@@ -126,6 +126,10 @@ return {
     ["error·message·not·string"] = "(error message not a string)",
     ["error·object·value·type"] = "(error object is a %s value)",
     ["error·calling·print"] = "error calling 'print' (%s)",
+    ["file·error·no·extra·info"] = "(no extra info)",
+    ["file·error·with·path"] = "%s: %s",
+    ["cannot·operation·file·with·reason"] = "cannot %s %s: %s",
+    ["cannot·operation·file"] = "cannot %s %s",
     ["interactive·locals·crossline·warning"] =
       "warning: locals do not survive across lines in interactive mode",
     ["name·or·variadic·expansion·expected"] = "<name> or '...' expected",
