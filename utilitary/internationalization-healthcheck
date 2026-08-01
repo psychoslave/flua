@@ -128,7 +128,7 @@ local function main()
 
   if not must_run(
       "Test -P rejects native '='",
-      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P -e "local f,e←load('a=1'); assert(f＝nil and string.find(e, '⚠ (= ∉ Σ) ∧ Γ ⊬ ⟨…◁=▷…⟩', 1, true)); print('plain-reject-ok')"]],
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P -e "local f,e←load('a=1'); assert(f＝nil and string.find(e, '⚠ (σ ∉ Σ) ∧ Γ ⊬ ⟨…⇔…⟩', 1, true)); print('plain-reject-ok')"]],
       20) then
     return 1
   end

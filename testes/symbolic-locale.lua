@@ -12,7 +12,7 @@ elseif mode ＝ "plain" then
   do
     local f, err ← load("z=7")
     assert(f ＝ nil and type(err) ＝ "string")
-    assert(string.find(err, "⚠ (= ∉ Σ) ∧ Γ ⊬ ⟨…◁=▷…⟩", 1, true))
+    assert(string.find(err, "⚠ (σ ∉ Σ) ∧ Γ ⊬ ⟨…⇔…⟩", 1, true))
   end
 else
   error("invalid mode")
@@ -33,7 +33,7 @@ assert(5 ％ 2 ＝ 1)
 do
   local f, err ← load("local x =")
   assert(f ＝ nil and type(err) ＝ "string")
-  assert(string.find(err, "⚠ (= ∉ Σ) ∧ Γ ⊬ ⟨…◁=▷…⟩", 1, true))
+  assert(string.find(err, "⚠ (σ ∉ Σ) ∧ Γ ⊬ ⟨…⇔…⟩", 1, true))
 end
 
 print("symbolic-locale-ok")

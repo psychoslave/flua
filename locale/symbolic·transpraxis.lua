@@ -38,6 +38,6 @@ return {
 
   diagnostics = {
     ["generic·syntax·error"] = "⚠ ∄π∈Π : Γ ⊢ ⟨…=…⟩",
-    ["unexpected·symbol"] = "⚠ (= ∉ Σ) ∧ Γ ⊬ ⟨…◁=▷…⟩",
+    ["unexpected·symbol"] = "⚠ (σ ∉ Σ) ∧ Γ ⊬ ⟨…⇔…⟩",
   },
 }
