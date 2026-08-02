@@ -42,8 +42,53 @@ typedef struct {
 } LoadState;
 
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
+static const char *localized_why (LoadState *S, const char *why) {
+  if (strcmp(why, "truncated chunk") == 0)
+    return locale_get(S->L, "diagnostics", "truncated·chunk", why);
+  if (strcmp(why, "truncated fixed buffer") == 0)
+    return locale_get(S->L, "diagnostics", "truncated·fixed·buffer", why);
+  if (strcmp(why, "integer overflow") == 0)
+    return locale_get(S->L, "diagnostics", "integer·overflow", why);
+  if (strcmp(why, "invalid string index") == 0)
+    return locale_get(S->L, "diagnostics", "invalid·string·index", why);
+  if (strcmp(why, "bad format for constant string") == 0)
+    return locale_get(S->L, "diagnostics",
+                      "bad·format·for·constant·string", why);
+  if (strcmp(why, "invalid constant") == 0)
+    return locale_get(S->L, "diagnostics", "invalid·constant", why);
+  if (strcmp(why, "version mismatch") == 0)
+    return locale_get(S->L, "diagnostics", "version·mismatch", why);
+  if (strcmp(why, "format mismatch") == 0)
+    return locale_get(S->L, "diagnostics", "format·mismatch", why);
+  if (strcmp(why, "not a binary chunk") == 0)
+    return locale_get(S->L, "diagnostics", "not·a·binary·chunk", why);
+  return why;
+}
+
+
 static l_noret error (LoadState *S, const char *why) {
-  luaO_pushfstring(S->L, "%s: bad binary format (%s)", S->name, why);
+  why = localized_why(S, why);
+  luaO_pushfstring(S->L, locale_get(S->L, "diagnostics",
+                                    "bad·binary·format",
+                                    "%s: bad binary format (%s)"),
+                   S->name, why);
   luaD_throw(S->L, LUA_ERRSYNTAX);
 }
 
@@ -351,7 +396,8 @@ static void checkliteral (LoadState *S, const char *s, const char *msg) {
 
 
 static l_noret numerror (LoadState *S, const char *what, const char *tname) {
-  const char *msg = luaO_pushfstring(S->L, "%s %s mismatch", tname, what);
+  const char *msg = luaO_pushfstring(S->L, locale_get(S->L, "diagnostics",
+    "binary·number·mismatch", "%s %s mismatch"), tname, what);
   error(S, msg);
 }
 
@@ -418,4 +464,3 @@ LClosure *luaU_undump (lua_State *L, ZIO *Z, Table *anchor, const char *name,
   luai_verifycode(L, cl->p);
   return cl;
 }
-

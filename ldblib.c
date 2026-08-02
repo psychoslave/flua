@@ -27,6 +27,23 @@
 */
 static const char *const HOOKKEY = "_HOOKKEY";
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 
 /*
 ** If L1 != L, L1 can be in any state, and therefore there are no
@@ -423,7 +440,8 @@ static int db_gethook (lua_State *L) {
 static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
-    lua_writestringerror("%s", "lua_debug> ");
+    lua_writestringerror("%s", locale_get(L, "repl",
+      "debug·prompt", "lua_debug> "));
     if (fgets(buffer, sizeof(buffer), stdin) == NULL ||
         strcmp(buffer, "cont\n") == 0)
       return 0;
@@ -474,4 +492,3 @@ LUAMOD_API int luaopen_debug (lua_State *L) {
   luaL_newlib(L, dblib);
   return 1;
 }
-

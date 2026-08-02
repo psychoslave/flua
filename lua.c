@@ -447,10 +447,13 @@ static int handle_luainit (lua_State *L) {
 }
 
 
-static void locale_warning (const char *locale, const char *msg) {
+static void locale_warning (lua_State *L, const char *locale, const char *msg) {
   if (progname != NULL)
     lua_writestringerror("%s: ", progname);
-  lua_writestringerror("warning: failed to load locale '%s'", locale);
+  lua_writestringerror(locale_get(L, "diagnostics",
+                                  "failed·to·load·locale·warning",
+                                  "warning: failed to load locale '%s'"),
+                       locale);
   if (msg != NULL)
     lua_writestringerror(" (%s)", msg);
   lua_writeline();
@@ -466,7 +469,9 @@ static int handle_lualocale (lua_State *L) {
     int n = snprintf(chunkname, sizeof(chunkname), "locale/%s.lua", locale);
     int status;
     if (n <= 0 || n >= cast_int(sizeof(chunkname))) {
-      locale_warning(locale, "locale name is too long");
+      locale_warning(L, locale, locale_get(L, "diagnostics",
+                                           "locale·name·too·long",
+                                           "locale name is too long"));
       return LUA_OK;
     }
     status = luaL_loadfilex(L, chunkname, "t");
@@ -474,12 +479,14 @@ static int handle_lualocale (lua_State *L) {
       status = docall(L, 0, 1);  /* locale file must return one value */
     if (status != LUA_OK) {
       const char *msg = lua_tostring(L, -1);
-      locale_warning(locale, msg);
+      locale_warning(L, locale, msg);
       lua_pop(L, 1);  /* remove error message */
       return LUA_OK;  /* keep running with native hardcoded strings */
     }
     if (!lua_istable(L, -1)) {
-      locale_warning(locale, "locale chunk did not return a table");
+      locale_warning(L, locale, locale_get(L, "diagnostics",
+                                           "locale·chunk·not·table",
+                                           "locale chunk did not return a table"));
       lua_pop(L, 1);  /* remove returned value */
       return LUA_OK;
     }

@@ -267,6 +267,121 @@ LUALIB_API void luaL_where (lua_State *L, int level) {
 }
 
 
+static const char *laux_localize_error_fmt (lua_State *L, const char *fmt) {
+  if (strcmp(fmt, "cannot close a %s coroutine") == 0)
+    return locale_get(L, "diagnostics", "cannot·close·coroutine", fmt);
+  if (strcmp(fmt, "cannot close main thread") == 0)
+    return locale_get(L, "diagnostics", "cannot·close·main·thread", fmt);
+  if (strcmp(fmt, "unable to get ModuleFileName") == 0)
+    return locale_get(L, "diagnostics", "unable·to·get·module·filename", fmt);
+  if (strcmp(fmt, "'package.%s' must be a string") == 0)
+    return locale_get(L, "diagnostics", "package·field·must·be·string", fmt);
+  if (strcmp(fmt, "error loading module '%s' from file '%s':\n\t%s") == 0)
+    return locale_get(L, "diagnostics",
+                      "error·loading·module·from·file", fmt);
+  if (strcmp(fmt, "'package.searchers' must be a table") == 0)
+    return locale_get(L, "diagnostics",
+                      "package·searchers·must·be·table", fmt);
+  if (strcmp(fmt, "module '%s' not found:%s") == 0)
+    return locale_get(L, "diagnostics", "module·not·found", fmt);
+  if (strcmp(fmt, "stack overflow") == 0)
+    return locale_get(L, "diagnostics", "stack·overflow", fmt);
+  if (strcmp(fmt, "'popen' not supported") == 0)
+    return locale_get(L, "diagnostics", "popen·not·supported", fmt);
+  if (strcmp(fmt, "attempt to use a closed file") == 0)
+    return locale_get(L, "diagnostics", "attempt·to·use·closed·file", fmt);
+  if (strcmp(fmt, "cannot open file '%s' (%s)") == 0)
+    return locale_get(L, "diagnostics", "cannot·open·file", fmt);
+  if (strcmp(fmt, "default %s file is closed") == 0)
+    return locale_get(L, "diagnostics", "default·file·is·closed", fmt);
+  if (strcmp(fmt, "file is already closed") == 0)
+    return locale_get(L, "diagnostics", "file·already·closed", fmt);
+  if (strcmp(fmt, "unable to generate a unique filename") == 0)
+    return locale_get(L, "diagnostics",
+                      "unable·to·generate·unique·filename", fmt);
+  if (strcmp(fmt, "field '%s' is out-of-bound") == 0)
+    return locale_get(L, "diagnostics", "field·out·of·bound", fmt);
+  if (strcmp(fmt, "field '%s' is not an integer") == 0)
+    return locale_get(L, "diagnostics", "field·not·integer", fmt);
+  if (strcmp(fmt, "field '%s' missing in date table") == 0)
+    return locale_get(L, "diagnostics", "field·missing·in·date·table", fmt);
+  if (strcmp(fmt, "cannot change a protected metatable") == 0)
+    return locale_get(L, "diagnostics",
+                      "cannot·change·protected·metatable", fmt);
+  if (strcmp(fmt, "reader function must return a string") == 0)
+    return locale_get(L, "diagnostics",
+                      "reader·function·must·return·string", fmt);
+  if (strcmp(fmt, "wrong number of arguments to 'insert'") == 0)
+    return locale_get(L, "diagnostics",
+                      "wrong·number·of·arguments·to·insert", fmt);
+  if (strcmp(fmt, "invalid value (%s) at index %I in table for 'concat'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·value·at·index·for·concat", fmt);
+  if (strcmp(fmt, "too many results to unpack") == 0)
+    return locale_get(L, "diagnostics", "too·many·results·to·unpack", fmt);
+  if (strcmp(fmt, "invalid order function for sorting") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·order·function·for·sorting", fmt);
+  if (strcmp(fmt, "wrong number of arguments") == 0)
+    return locale_get(L, "diagnostics", "wrong·number·of·arguments", fmt);
+  if (strcmp(fmt, "string slice too long") == 0)
+    return locale_get(L, "diagnostics", "string·slice·too·long", fmt);
+  if (strcmp(fmt, "initial position is a continuation byte") == 0)
+    return locale_get(L, "diagnostics",
+                      "initial·position·continuation·byte", fmt);
+  if (strcmp(fmt, "resulting string too large") == 0)
+    return locale_get(L, "diagnostics", "resulting·string·too·large", fmt);
+  if (strcmp(fmt, "attempt to %s a '%s' with a '%s'") == 0)
+    return locale_get(L, "diagnostics", "attempt·op·string·with·string", fmt);
+  if (strcmp(fmt, "invalid capture index %%%d") == 0)
+    return locale_get(L, "diagnostics", "invalid·capture·index", fmt);
+  if (strcmp(fmt, "invalid pattern capture") == 0)
+    return locale_get(L, "diagnostics", "invalid·pattern·capture", fmt);
+  if (strcmp(fmt, "malformed pattern (ends with '%%')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·ends·with·percent", fmt);
+  if (strcmp(fmt, "malformed pattern (missing ']')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·missing·closing·bracket", fmt);
+  if (strcmp(fmt, "malformed pattern (missing arguments to '%%b')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·missing·percentb·args", fmt);
+  if (strcmp(fmt, "too many captures") == 0)
+    return locale_get(L, "diagnostics", "too·many·captures", fmt);
+  if (strcmp(fmt, "pattern too complex") == 0)
+    return locale_get(L, "diagnostics", "pattern·too·complex", fmt);
+  if (strcmp(fmt, "missing '[' after '%%f' in pattern") == 0)
+    return locale_get(L, "diagnostics", "missing·bracket·after·percentf", fmt);
+  if (strcmp(fmt, "unfinished capture") == 0)
+    return locale_get(L, "diagnostics", "unfinished·capture", fmt);
+  if (strcmp(fmt, "invalid use of '%c' in replacement string") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·use·in·replacement·string", fmt);
+  if (strcmp(fmt, "invalid replacement value (a %s)") == 0)
+    return locale_get(L, "diagnostics", "invalid·replacement·value", fmt);
+  if (strcmp(fmt, "modifiers for format '%%a'/'%%A' not implemented") == 0)
+    return locale_get(L, "diagnostics",
+                      "modifiers·for·percenta·not·implemented", fmt);
+  if (strcmp(fmt, "invalid conversion specification: '%s'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·conversion·specification", fmt);
+  if (strcmp(fmt, "invalid format (too long)") == 0)
+    return locale_get(L, "diagnostics", "invalid·format·too·long", fmt);
+  if (strcmp(fmt, "specifier '%%q' cannot have modifiers") == 0)
+    return locale_get(L, "diagnostics",
+                      "specifier·percentq·cannot·have·modifiers", fmt);
+  if (strcmp(fmt, "invalid conversion '%s' to 'format'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·conversion·to·format", fmt);
+  if (strcmp(fmt, "missing size for format option 'c'") == 0)
+    return locale_get(L, "diagnostics",
+                      "missing·size·for·format·option·c", fmt);
+  if (strcmp(fmt, "invalid format option '%c'") == 0)
+    return locale_get(L, "diagnostics", "invalid·format·option", fmt);
+  if (strcmp(fmt, "%d-byte integer does not fit into Lua Integer") == 0)
+    return locale_get(L, "diagnostics",
+                      "byte·integer·does·not·fit·lua·integer", fmt);
+  return fmt;
+}
+
+
 /*
 ** Again, the use of 'lua_pushvfstring' ensures this function does
 ** not need reserved stack space when called. (At worst, it generates
@@ -274,6 +389,7 @@ LUALIB_API void luaL_where (lua_State *L, int level) {
 */
 LUALIB_API int luaL_error (lua_State *L, const char *fmt, ...) {
   va_list argp;
+  fmt = laux_localize_error_fmt(L, fmt);
   va_start(argp, fmt);
   luaL_where(L, 1);
   lua_pushvfstring(L, fmt, argp);
@@ -805,7 +921,12 @@ static const char *getF (lua_State *L, void *ud, size_t *size) {
   LoadF *lf = (LoadF *)ud;
   UNUSED(L);
   if (lf->n > 0) {  /* are there pre-read characters to be read? */
-    *size = lf->n;  /* return them (chars already in buffer) */
+    size_t pre = lf->n;
+    /* Return pre-read bytes together with fresh bytes so multi-byte locale
+       tokens at chunk start are not artificially split across reads. */
+    if (pre < sizeof(lf->buff))
+      pre += fread(lf->buff + pre, 1, sizeof(lf->buff) - pre, lf->f);
+    *size = pre;
     lf->n = 0;  /* no more pre-read characters */
   }
   else {  /* read a block from file */

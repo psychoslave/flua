@@ -36,6 +36,23 @@
 static const char strlocal[] = "local";
 static const char strupval[] = "upvalue";
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 static const char *funcnamefromcall (lua_State *L, CallInfo *ci,
                                                    const char **name);
 
@@ -717,7 +734,10 @@ static const char *formatvarinfo (lua_State *L, const char *kind,
   if (kind == NULL)
     return "";  /* no information */
   else
-    return luaO_pushfstring(L, " (%s '%s')", kind, name);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics",
+                                          "varinfo·kind·name",
+                                          " (%s '%s')"),
+                            kind, name);
 }
 
 /*
@@ -826,13 +846,19 @@ l_noret luaG_errnnil (lua_State *L, LClosure *cl, int k) {
 const char *luaG_addinfo (lua_State *L, const char *msg, TString *src,
                                         int line) {
   if (src == NULL)  /* no debug information? */
-    return luaO_pushfstring(L, "?:?: %s", msg);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics",
+                                          "unknown·source·line·message",
+                                          "?:?: %s"),
+                            msg);
   else {
     char buff[LUA_IDSIZE];
     size_t idlen;
     const char *id = getlstr(src, idlen);
     luaO_chunkid(buff, id, idlen);
-    return luaO_pushfstring(L, "%s:%d: %s", buff, line, msg);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics",
+                                          "source·line·message",
+                                          "%s:%d: %s"),
+                            buff, line, msg);
   }
 }
 
@@ -858,6 +884,61 @@ l_noret luaG_runerror (lua_State *L, const char *fmt, ...) {
   CallInfo *ci = L->ci;
   const char *msg;
   va_list argp;
+  if (strcmp(fmt, "stack overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "stack·overflow", fmt);
+  else if (strcmp(fmt, "'__call' chain too long") == 0)
+    fmt = locale_get(L, "diagnostics", "call·chain·too·long", fmt);
+  else if (strcmp(fmt, "attempt to yield across a C-call boundary") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "attempt·yield·across·ccall·boundary", fmt);
+  else if (strcmp(fmt, "attempt to yield from outside a coroutine") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "attempt·yield·outside·coroutine", fmt);
+  else if (strcmp(fmt, "vararg table has no proper 'n'") == 0)
+    fmt = locale_get(L, "diagnostics", "vararg·table·no·proper·n", fmt);
+  else if (strcmp(fmt, "invalid key to 'next'") == 0)
+    fmt = locale_get(L, "diagnostics", "invalid·key·to·next", fmt);
+  else if (strcmp(fmt, "table overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "table·overflow", fmt);
+  else if (strcmp(fmt, "table index is nil") == 0)
+    fmt = locale_get(L, "diagnostics", "table·index·is·nil", fmt);
+  else if (strcmp(fmt, "table index is NaN") == 0)
+    fmt = locale_get(L, "diagnostics", "table·index·is·nan", fmt);
+  else if (strcmp(fmt, "variable '%s' got a non-closable value") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "variable·got·nonclosable·value", fmt);
+  else if (strcmp(fmt, "C stack overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "c·stack·overflow", fmt);
+  else if (strcmp(fmt, "too many %s (limit is %d)") == 0)
+    fmt = locale_get(L, "diagnostics", "too·many·elements·limit", fmt);
+  else if (strcmp(fmt, "memory allocation error: block too big") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "memory·allocation·error·block·too·big", fmt);
+  else if (strcmp(fmt, "'for' step is zero") == 0)
+    fmt = locale_get(L, "diagnostics", "for·step·is·zero", fmt);
+  else if (strcmp(fmt, "'__index' chain too long; possible loop") == 0)
+    fmt = locale_get(L, "diagnostics", "index·chain·too·long", fmt);
+  else if (strcmp(fmt, "'__newindex' chain too long; possible loop") == 0)
+    fmt = locale_get(L, "diagnostics", "newindex·chain·too·long", fmt);
+  else if (strcmp(fmt, "string length overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "string·length·overflow", fmt);
+  else if (strcmp(fmt, "attempt to divide by zero") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·divide·by·zero", fmt);
+  else if (strcmp(fmt, "attempt to perform 'n%%0'") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·perform·nmod0", fmt);
+  else if (strcmp(fmt, "attempt to %s a %s value%s") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·to·op·a·value", fmt);
+  else if (strcmp(fmt, "bad 'for' %s (number expected, got %s)") == 0)
+    fmt = locale_get(L, "diagnostics", "bad·for·number·expected", fmt);
+  else if (strcmp(fmt, "number%s has no integer representation") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "number·has·no·integer·representation", fmt);
+  else if (strcmp(fmt, "attempt to compare two %s values") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·compare·two·values", fmt);
+  else if (strcmp(fmt, "attempt to compare %s with %s") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·compare·with", fmt);
+  else if (strcmp(fmt, "global '%s' already defined") == 0)
+    fmt = locale_get(L, "diagnostics", "global·already·defined", fmt);
   luaC_checkGC(L);  /* error message uses memory */
   pushvfstring(L, argp, fmt, msg);
   if (isLua(ci)) {  /* Lua function? */
@@ -976,4 +1057,3 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
   }
   return 1;  /* keep 'trap' on */
 }
-

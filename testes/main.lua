@@ -196,6 +196,42 @@ assert(not string.find(defaultpath, "xxx") and
        not string.find(defaultCpath, "xxx") and
        string.find(defaultCpath, "lua"))
 
+print("testing option '-P'")
+
+assert(os.execute("mkdir -p locale"))
+prepfile([[
+return {
+  operators = {
+    ["assignment·operator"] = "←",
+    ["equality·comparison"] = "＝",
+  },
+  internals = {
+    ["global·table·identifier"] = "🌐",
+    ["environment·identifier"] = "_ENV",
+    ["implicit·self·parameter"] = "self",
+  },
+  diagnostics = {
+    ["unexpected·symbol"] = "⚠",
+  },
+}
+]], false, "locale/symtmp.lua")
+
+prepfile("print(type(_G), type(rawget(_G, '🌐')))")
+RUN([[env LUA_LOCALE='symtmp' lua %s > %s]], prog, out)
+checkout("table\ttable\n")
+
+prepfile("print(type(_G))")
+RUN([[env LUA_LOCALE='symtmp' lua -P %s > %s]], prog, out)
+checkout("nil\n")
+
+prepfile("a=1")
+NoRun("⚠", [[env LUA_LOCALE='symtmp' lua -P %s]], prog)
+
+prepfile("a←1; print(a)")
+RUN([[env LUA_LOCALE='symtmp' lua -P %s > %s]], prog, out)
+checkout("1\n")
+assert(os.remove("locale/symtmp.lua"))
+
 
 -- (LUA_READLINELIB was introduced in 5.5.1)
 if release >= "5.5.1" then

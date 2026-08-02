@@ -60,9 +60,9 @@ typedef struct LocaleOp {
   int token;
 } LocaleOp;
 
-static LocaleOp locale_ops[32];
+static LocaleOp locale_ops[96];
 static int locale_ops_n = 0;
-static LocaleOp blocked_native_ops[32];
+static LocaleOp blocked_native_ops[96];
 static int blocked_native_ops_n = 0;
 static int plain_locale_mode = 0;
 
@@ -120,6 +120,23 @@ static void add_locale_op (lua_State *L, const char *key,
     locale_ops_n++;
     if (plain_locale_mode)
       add_blocked_native_op(fallback);
+  }
+}
+
+static int starts_ascii_identifier (const char *s) {
+  unsigned char c = cast_uchar(s[0]);
+  return (c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'));
+}
+
+static void add_locale_keyword_symbol (lua_State *L, const char *key,
+                                       const char *fallback, int token) {
+  const char *s = locale_get(L, "keywords", key, fallback);
+  if (s[0] != '\0' && strcmp(s, fallback) != 0 && !starts_ascii_identifier(s)) {
+    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
+    locale_ops[locale_ops_n].bytes = s;
+    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].token = token;
+    locale_ops_n++;
   }
 }
 
@@ -204,6 +221,9 @@ void luaX_setlocale (lua_State *L) {
   add_locale_op(L, "bitwise·exclusive·disjunction", "~", '~');
   add_locale_op(L, "field·access·operator", ".", '.');
   add_locale_op(L, "method·invocation·operator", ":", ':');
+  for (i = 0; i < NUM_RESERVED; i++)
+    add_locale_keyword_symbol(L, keyword_keys[i], luaX_default_tokens[i],
+                              FIRST_RESERVED + i);
 }
 
 

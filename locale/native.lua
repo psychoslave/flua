@@ -95,6 +95,7 @@ return {
     ["incomplete·input·marker"] = "<eof>",
     ["interactive·source·identity"] = "=stdin",
     ["commandline·source·identity"] = "=(command line)",
+    ["debug·prompt"] = "lua_debug> ",
   },
 
   diagnostics = {
@@ -169,6 +170,110 @@ return {
       "core and library have incompatible numeric types",
     ["version·mismatch·app·needs·core·provides"] =
       "version mismatch: app. needs %f, Lua core provides %f",
+    ["cannot·close·coroutine"] = "cannot close a %s coroutine",
+    ["cannot·close·main·thread"] = "cannot close main thread",
+    ["unable·to·get·module·filename"] = "unable to get ModuleFileName",
+    ["package·field·must·be·string"] = "'package.%s' must be a string",
+    ["error·loading·module·from·file"] =
+      "error loading module '%s' from file '%s':\n\t%s",
+    ["package·searchers·must·be·table"] = "'package.searchers' must be a table",
+    ["module·not·found"] = "module '%s' not found:%s",
+    ["popen·not·supported"] = "'popen' not supported",
+    ["attempt·to·use·closed·file"] = "attempt to use a closed file",
+    ["cannot·open·file"] = "cannot open file '%s' (%s)",
+    ["default·file·is·closed"] = "default %s file is closed",
+    ["file·already·closed"] = "file is already closed",
+    ["unable·to·generate·unique·filename"] = "unable to generate a unique filename",
+    ["field·out·of·bound"] = "field '%s' is out-of-bound",
+    ["field·not·integer"] = "field '%s' is not an integer",
+    ["field·missing·in·date·table"] = "field '%s' missing in date table",
+    ["cannot·change·protected·metatable"] = "cannot change a protected metatable",
+    ["reader·function·must·return·string"] = "reader function must return a string",
+    ["wrong·number·of·arguments·to·insert"] = "wrong number of arguments to 'insert'",
+    ["invalid·value·at·index·for·concat"] =
+      "invalid value (%s) at index %I in table for 'concat'",
+    ["too·many·results·to·unpack"] = "too many results to unpack",
+    ["invalid·order·function·for·sorting"] = "invalid order function for sorting",
+    ["wrong·number·of·arguments"] = "wrong number of arguments",
+    ["string·slice·too·long"] = "string slice too long",
+    ["initial·position·continuation·byte"] =
+      "initial position is a continuation byte",
+    ["attempt·op·string·with·string"] = "attempt to %s a '%s' with a '%s'",
+    ["invalid·capture·index"] = "invalid capture index %%%d",
+    ["invalid·pattern·capture"] = "invalid pattern capture",
+    ["malformed·pattern·ends·with·percent"] =
+      "malformed pattern (ends with '%%')",
+    ["malformed·pattern·missing·closing·bracket"] =
+      "malformed pattern (missing ']')",
+    ["malformed·pattern·missing·percentb·args"] =
+      "malformed pattern (missing arguments to '%%b')",
+    ["too·many·captures"] = "too many captures",
+    ["pattern·too·complex"] = "pattern too complex",
+    ["missing·bracket·after·percentf"] =
+      "missing '[' after '%%f' in pattern",
+    ["unfinished·capture"] = "unfinished capture",
+    ["invalid·use·in·replacement·string"] =
+      "invalid use of '%c' in replacement string",
+    ["invalid·replacement·value"] = "invalid replacement value (a %s)",
+    ["modifiers·for·percenta·not·implemented"] =
+      "modifiers for format '%%a'/'%%A' not implemented",
+    ["invalid·conversion·specification"] =
+      "invalid conversion specification: '%s'",
+    ["invalid·format·too·long"] = "invalid format (too long)",
+    ["specifier·percentq·cannot·have·modifiers"] =
+      "specifier '%%q' cannot have modifiers",
+    ["invalid·conversion·to·format"] =
+      "invalid conversion '%s' to 'format'",
+    ["missing·size·for·format·option·c"] = "missing size for format option 'c'",
+    ["invalid·format·option"] = "invalid format option '%c'",
+    ["byte·integer·does·not·fit·lua·integer"] =
+      "%d-byte integer does not fit into Lua Integer",
+    ["varinfo·kind·name"] = " (%s '%s')",
+    ["call·chain·too·long"] = "'__call' chain too long",
+    ["attempt·yield·across·ccall·boundary"] =
+      "attempt to yield across a C-call boundary",
+    ["attempt·yield·outside·coroutine"] =
+      "attempt to yield from outside a coroutine",
+    ["vararg·table·no·proper·n"] = "vararg table has no proper 'n'",
+    ["invalid·key·to·next"] = "invalid key to 'next'",
+    ["table·overflow"] = "table overflow",
+    ["table·index·is·nil"] = "table index is nil",
+    ["table·index·is·nan"] = "table index is NaN",
+    ["variable·got·nonclosable·value"] =
+      "variable '%s' got a non-closable value",
+    ["c·stack·overflow"] = "C stack overflow",
+    ["too·many·elements·limit"] = "too many %s (limit is %d)",
+    ["memory·allocation·error·block·too·big"] =
+      "memory allocation error: block too big",
+    ["for·step·is·zero"] = "'for' step is zero",
+    ["index·chain·too·long"] = "'__index' chain too long; possible loop",
+    ["newindex·chain·too·long"] = "'__newindex' chain too long; possible loop",
+    ["string·length·overflow"] = "string length overflow",
+    ["attempt·divide·by·zero"] = "attempt to divide by zero",
+    ["attempt·perform·nmod0"] = "attempt to perform 'n%%0'",
+    ["attempt·to·op·a·value"] = "attempt to %s a %s value%s",
+    ["bad·for·number·expected"] = "bad 'for' %s (number expected, got %s)",
+    ["number·has·no·integer·representation"] =
+      "number%s has no integer representation",
+    ["attempt·compare·two·values"] = "attempt to compare two %s values",
+    ["attempt·compare·with"] = "attempt to compare %s with %s",
+    ["global·already·defined"] = "global '%s' already defined",
+    ["unknown·source·line·message"] = "?:?: %s",
+    ["source·line·message"] = "%s:%d: %s",
+    ["bad·binary·format"] = "%s: bad binary format (%s)",
+    ["binary·number·mismatch"] = "%s %s mismatch",
+    ["truncated·chunk"] = "truncated chunk",
+    ["truncated·fixed·buffer"] = "truncated fixed buffer",
+    ["integer·overflow"] = "integer overflow",
+    ["invalid·string·index"] = "invalid string index",
+    ["bad·format·for·constant·string"] = "bad format for constant string",
+    ["invalid·constant"] = "invalid constant",
+    ["version·mismatch"] = "version mismatch",
+    ["format·mismatch"] = "format mismatch",
+    ["not·a·binary·chunk"] = "not a binary chunk",
+    ["failed·to·load·locale·warning"] = "warning: failed to load locale '%s'",
+    ["locale·name·too·long"] = "locale name is too long",
+    ["locale·chunk·not·table"] = "locale chunk did not return a table",
   },
 
   internals = {
