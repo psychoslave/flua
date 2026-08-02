@@ -4,7 +4,7 @@
 --
 -- Symbol picks:
 --   🌐 = global table alias (worldwide/global vibe)
---   🏢 = environment binding (office environment, literally)
+--   🧭 = environment binding (context navigation / directional scope)
 --   🪞 = implicit method receiver ("self"), because reflection is classy
 --
 -- Diagnostics here are intentionally theatrical:
@@ -32,7 +32,7 @@ return {
 
   internals = {
     ["global·table·identifier"] = "🌐",
-    ["environment·identifier"] = "🏢",
+    ["environment·identifier"] = "🧭",
     ["implicit·self·parameter"] = "🪞",
   },
 
