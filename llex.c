@@ -219,6 +219,7 @@ void luaX_setlocale (lua_State *L) {
   add_locale_op(L, "bitwise·conjunction", "&", '&');
   add_locale_op(L, "bitwise·disjunction", "|", '|');
   add_locale_op(L, "bitwise·exclusive·disjunction", "~", '~');
+  add_locale_op(L, "bitwise·negation", "~", '~');
   add_locale_op(L, "field·access·operator", ".", '.');
   add_locale_op(L, "method·invocation·operator", ":", ':');
   for (i = 0; i < NUM_RESERVED; i++)
