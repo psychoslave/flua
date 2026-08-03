@@ -12,7 +12,7 @@
   ▶️
     📍 f, err ← load("z=7")
     assert(f ＝ nil and type(err) ＝ "string")
-    assert(string.find(err, "⚠", 1, true))
+    assert(string‐find(err, "⚠", 1, true))
   ∎
 └
   error("invalid mode")
@@ -26,14 +26,18 @@ assert(b ＝ 5)
 
 assert(41 ≠ 42)
 assert(2 ≤ 3 ∧ 4 ≥ 4)
-assert(8 ÷ 2 ＝ 4)
+assert(2 ﹤ 3 ∧ 4 ﹥ 3)
+assert(7 ÷ 2 ＝ 3)
+assert(7 ∕ 2 ＝ 3.5)
 assert(2 ↑ 3 ＝ 8)
-assert(5 ％ 2 ＝ 1)
+assert(5 ⁒ 2 ＝ 1)
+assert(1 ≪ 3 ＝ 8)
+assert(8 ≫ 1 ＝ 4)
 
 ▶️
   📍 f, err ← load("📍 x =")
   assert(f ＝ nil and type(err) ＝ "string")
-  assert(string.find(err, "⚠", 1, true))
+  assert(string‐find(err, "⚠", 1, true))
 ∎
 
 ▶️
@@ -46,7 +50,7 @@ assert(5 ％ 2 ＝ 1)
 
 ▶️
   📍 i ← 0
-  ↺ i ‹ 2 ▶️
+  ↺ i ﹤ 2 ▶️
     i ← i ＋ 1
   ∎
   assert(i ＝ 2)
@@ -60,9 +64,19 @@ assert(5 ％ 2 ＝ 1)
   assert(j ＝ 2)
 ∎
 
-ƒ sqr(x)
+□ sqr(x)
   ⏫ x × x
 ∎
 assert(sqr(3) ＝ 9)
+
+□ argc(…)
+  ⏫ select("#", …)
+∎
+assert(argc(1, 2, 3) ＝ 3)
+
+┬ mode ＝ "default" ∴
+  📍 f ← assert(load("📍 arr ← {1, 2, 3}; assert(#arr ＝ 3)"))
+  f()
+∎
 
 print("symbolic-locale-ok")

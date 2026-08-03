@@ -22,6 +22,12 @@ Extended metaphors:
     ┬ = if branch root/condition head
     ├ = elseif branch continuation
     └ = else fallback branch
+  Bitwise circled family:
+    bitwise ops are mapped to circled counterparts when available
+    (⊗, ⊙, ⊕, ⊝) to stay visually close to logic symbols.
+    Ideally each would be generated from its non-bitwise form via
+    U+20DD enclosing circle (e.g. ∧⃝, ∨⃝, ¬⃝), but that rendering is
+    typically awkward/inconsistent in terminal and editor fonts.
 
 Diagnostics here are intentionally theatrical:
 they parade academic symbolism with an esoteric but internally coherent
@@ -47,8 +53,8 @@ local locale = {
     ["falsity·literal"] = "⊥",
     -- ∀ matches "for each" quantification semantics for loop iteration.
     ["iteration·introducer"] = "∀",
-    -- ƒ marks named/function declaration; keep ↦ available for infix mappings.
-    ["function·introducer"] = "ƒ",
+    -- □ marks a declaration frame, pairing visually with terminator ∎.
+    ["function·introducer"] = "□",
     -- 🗺️ marks declarations that bind at map/world scope.
     ["dynamic·scope·declaration"] = "🗺️",
     -- ⏭️ maps goto to a visual "skip/jump to marker" control.
@@ -91,35 +97,56 @@ local locale = {
     ["inferior·ordering·comparison"] = "≤",
     -- ≥ is standard symbolic non-strict upper bound.
     ["superior·ordering·comparison"] = "≥",
-    -- ‹ emphasizes strict lower-than as a distinct glyph.
-    ["strict·inferior·ordering"] = "‹",
-    -- › emphasizes strict greater-than as a distinct glyph.
-    ["strict·superior·ordering"] = "›",
+    -- ﹤ (U+FE64) is the compatibility small less-than form.
+    ["strict·inferior·ordering"] = "﹤",
+    -- ﹥ (U+FE65) is the compatibility small greater-than form.
+    ["strict·superior·ordering"] = "﹥",
     -- ＋ mirrors plus while keeping symbolic/fullwidth style coherence.
     ["addition·operator"] = "＋",
     -- − uses the mathematical minus sign (not ASCII hyphen-minus).
     ["subtraction·operator"] = "−",
     -- × is canonical multiplication notation.
     ["multiplication·operator"] = "×",
-    -- ÷ is canonical division notation.
-    ["division·operator"] = "÷",
-    ["integer·division·operator"] = "//",
-    -- ％ keeps fullwidth punctuation parity with other arithmetic symbols.
-    ["modulo·operator"] = "％",
+    -- ∕ (U+2215 DIVISION SLASH) keeps floating division explicit and localized.
+    ["division·operator"] = "∕",
+    -- ÷ denotes integer/quotient division in this symbolic locale.
+    ["integer·division·operator"] = "÷",
+    -- ⁒ stays visually near percent while keeping arithmetic modulo distinct
+    -- from Lua's textual % usages (patterns, format strings, replacements).
+    -- Dismissed: two-stacked-circles-style glyph like ideas were less recognizable
+    -- than this punctuation-family compromise in typical developer contexts.
+    ["modulo·operator"] = "⁒",
     -- ↑ denotes exponentiation as power "raised up".
     ["exponentiation·operator"] = "↑",
-    ["concatenation·operator"] = "..",
-    ["variadic·expansion"] = "...",
-    ["cardinality·operator"] = "#",
-    ["bitwise·conjunction"] = "&",
-    ["bitwise·disjunction"] = "|",
-    ["bitwise·exclusive·disjunction"] = "~",
-    ["bitwise·negation"] = "~",
-    ["ascending·significance·shift"] = "<<",
-    ["descending·significance·shift"] = ">>",
-    ["field·access·operator"] = ".",
-    ["method·invocation·operator"] = ":",
-    ["label·delimiter"] = "::",
+    -- ⧺ (U+29FA DOUBLE PLUS) explicitly denotes append/join composition.
+    ["concatenation·operator"] = "⧺",
+    -- … gives variadics a single-glyph ellipsis form.
+    ["variadic·expansion"] = "…",
+    -- 𐄹 (U+101B1 AEGEAN WEIGHT SECOND SUBUNIT) for cardinality: borrowed from
+    -- ancient metrology and repurposed as a "measure of magnitude" metaphor.
+    -- Considered alternatives: 📏 (ruler, literal measure) and 📐 (set square,
+    -- signaling integer result). Aegean weight was retained for its glyph density
+    -- (single codepoint), antiquarian coherence with this locale's esoteric style,
+    -- and obscurity (avoids visual ambiguity with other mathematical symbols).
+    ["cardinality·operator"] = "𐄹",
+    -- ⊗ is the circled-family counterpart chosen for bitwise conjunction.
+    ["bitwise·conjunction"] = "⊗",
+    -- ⊙ is used as the circled-family counterpart for bitwise disjunction.
+    ["bitwise·disjunction"] = "⊙",
+    -- ⊕ is widely used to denote exclusive disjunction/XOR.
+    ["bitwise·exclusive·disjunction"] = "⊕",
+    -- ⊝ is the unary circled-family counterpart for bitwise negation.
+    ["bitwise·negation"] = "⊝",
+    -- ≪ is the established left-shift notation in symbolic operator usage.
+    ["ascending·significance·shift"] = "≪",
+    -- ≫ is the established right-shift notation in symbolic operator usage.
+    ["descending·significance·shift"] = "≫",
+    -- ‐ (U+2010 HYPHEN) is the base hard-link for field/member access.
+    ["field·access·operator"] = "‐",
+    -- – (U+2013 EN DASH) marks method invocation as the extended variant.
+    ["method·invocation·operator"] = "–",
+    -- 🏷 frames goto labels with a direct tag metaphor.
+    ["label·delimiter"] = "🏷",
   },
 
   delimiters = {
@@ -136,8 +163,10 @@ local locale = {
   },
 
   attributes = {
-    ["immutability·attribute"] = "const",
-    ["closure·attribute"] = "close",
+    -- ❄️ conveys frozen/static state for immutable bindings.
+    ["immutability·attribute"] = "❄️",
+    -- 🔒 signals closing/finalization semantics through lock metaphor.
+    ["closure·attribute"] = "🔒",
   },
 
   repl = {
@@ -145,7 +174,8 @@ local locale = {
     ["primary·prompt"] = "✏ ",
     -- ✎ is a writing pencil: continuation of an in-progress line.
     ["continuation·prompt"] = "✎ ",
-    ["interpreter·identity"] = "lua",
+    -- 🌕 provides a moon glyph identity for Lua.
+    ["interpreter·identity"] = "🌕",
     ["usage·description"] =
       "usage: %s [options] [script [args]]\n" ..
       "Available options are:\n" ..
@@ -159,9 +189,12 @@ local locale = {
       "  -W        turn warnings on\n" ..
       "  --        stop handling options\n" ..
       "  -         stop handling options and execute stdin\n",
-    ["incomplete·input·marker"] = "<eof>",
-    ["interactive·source·identity"] = "=stdin",
-    ["commandline·source·identity"] = "=(command line)",
+    -- ⌁ is used as an EOT/EOF-style marker in this symbolic locale.
+    ["incomplete·input·marker"] = "⌁",
+    -- 🎞️ marks streamed interactive input source.
+    ["interactive·source·identity"] = "🎞️",
+    -- ≜ marks command-line chunks as explicit definitions.
+    ["commandline·source·identity"] = "≜",
     -- 🐞✏ combines bug context with interactive input affordance.
     ["debug·prompt"] = "🐞✏ ",
   },
