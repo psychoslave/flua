@@ -42,7 +42,7 @@ assert(8 ≫ 1 ＝ 4)
 
 ▶️
   📍 sum ← 0
-  ∀ _, v 📤 ipairs({1, 2, 3}) ▶️
+  ♺ _, v 📤 ipairs({1, 2, 3}) ▶️
     sum ← sum ＋ v
   ∎
   assert(sum ＝ 6)
@@ -50,7 +50,7 @@ assert(8 ≫ 1 ＝ 4)
 
 ▶️
   📍 i ← 0
-  ↺ i ﹤ 2 ▶️
+  ↻ i ﹤ 2 ▶️
     i ← i ＋ 1
   ∎
   assert(i ＝ 2)
@@ -60,7 +60,7 @@ assert(8 ≫ 1 ＝ 4)
   📍 j ← 0
   🔁
     j ← j ＋ 1
-  ↻ j ≥ 2
+  ↺ j ≥ 2
   assert(j ＝ 2)
 ∎
 

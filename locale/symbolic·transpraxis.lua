@@ -18,6 +18,9 @@ Extended metaphors:
     🔁 = repeat cycle (loop icon)³
     ⏫ = return result upward (fast-up/emit)³
     ⏭️ = goto jump (skip to next marked point)³
+  Loop-orientation congruence:
+    clockwise marks forward/pre-check iteration flow (♺, ↻)
+    counterclockwise marks post-check termination/back-edge (↺)
   Branch-tree symbols:⁴
     ┬ = if branch root/condition head
     ├ = elseif branch continuation
@@ -51,8 +54,8 @@ local locale = {
     ["block·terminator"] = "∎",
     -- ⊥ is canonical falsity in symbolic logic.
     ["falsity·literal"] = "⊥",
-    -- ∀ matches "for each" quantification semantics for loop iteration.
-    ["iteration·introducer"] = "∀",
+    -- ♺ keeps the cycle-arrow family used by loop keywords and avoids letters.
+    ["iteration·introducer"] = "♺",
     -- □ marks a declaration frame, pairing visually with terminator ∎.
     ["function·introducer"] = "□",
     -- 🗺️ marks declarations that bind at map/world scope.
@@ -79,10 +82,10 @@ local locale = {
     ["conditional·apodosis"] = "∴",
     -- ⊤ is canonical truth in symbolic logic.
     ["truth·literal"] = "⊤",
-    -- ↻ marks post-check continuation for repeat...until loops.
-    ["postcondition·iteration·terminator"] = "↻",
-    -- ↺ marks pre-check looping for while-style iteration.
-    ["precondition·iteration·introducer"] = "↺",
+    -- ↺ marks post-check termination/back-edge for repeat...until loops.
+    ["postcondition·iteration·terminator"] = "↺",
+    -- ↻ marks pre-check looping for while-style iteration.
+    ["precondition·iteration·introducer"] = "↻",
   },
 
   operators = {
