@@ -4,44 +4,44 @@
 │ 🎯(🧩(🌐) ＝ "🗂️")
 │ 🎯(⟼(🌐, "🌐") ＝ 🌐)
 │ ▶️
-│  📍 mtprobe ← {}
-│  ⇷(mtprobe, {x ← 7})
-│  🎯(⇸(mtprobe)‐x ＝ 7)
+│  📍 📦 ← {}
+│  ⇷(📦, {x ← 7})
+│  🎯(⇸(📦)‐x ＝ 7)
 │ ∎
 │ 🎯(⟼(🌐, "⚙️") ＝ os)
 │ 🎯(🧩(rawget(⚙️, "⏼")) ＝ "function")
 │ ▶️
-│  📍 quitprobe, quiterr ← load("⏫ ⚙️–⏼(0, false)")
-│  🎯(quitprobe ≠ nil ∧ quiterr ＝ nil)
+│  📍 🚚, 🎁 ← load("⏫ ⚙️–⏼(0, false)")
+│  🎯(🚚 ≠ nil ∧ 🎁 ＝ nil)
 │ ∎
 │ ▶️
-│  📍 ƒ ← 🎯(load("z=7; ⏫ z"))
-│  🎯(ƒ() ＝ 7)
+│  📍 🪤 ← 🎯(load("z=7; ⏫ z"))
+│  🎯(🪤() ＝ 7)
 │ ∎
 ├ 🎚 ＝ "plain" ∴
 │  🎯(🌐 ＝ nil)
 │  ▶️
-│    📍 f, err ← load("z=7")
-│    🎯(f ＝ nil and 🧩(err) ＝ "string")
+│    📍 🪤, err ← load("z=7")
+│    🎯(🪤 ＝ nil and 🧩(err) ＝ "string")
 │    🎯(string‐find(err, "(💬⛔💭)", 1, true))
 │  ∎
 └ error("invalid mode")
   ∎
 
 □ expect_fail(src, needle)
-  📍 f, err ← load(src)
-  🎯(f ＝ nil and 🧩(err) ＝ "string")
+  📍 🪤, err ← load(src)
+  🎯(🪤 ＝ nil and 🧩(err) ＝ "string")
   ┬ needle ≠ nil ∴
   │ 🎯(string‐find(err, needle, 1, true))
   ┴ ∎
   ⏫ err
 ∎
 
-a ← 1
-🎯(a ＝ 1)
+🗃️ ← 1
+🎯(🗃️ ＝ 1)
 
-b ← 2 ＋ 3
-🎯(b ＝ 5)
+🧰 ← 2 ＋ 3
+🎯(🧰 ＝ 5)
 
 🎯(41 ≠ 42)
 🎯(2 ≤ 3 ∧ 4 ≥ 4)

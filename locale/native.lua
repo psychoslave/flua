@@ -310,5 +310,13 @@ return {
     ["os·env·getter"] = "getenv",
     ["os·locale·setter"] = "setlocale",
     ["io·buffer·setter"] = "setvbuf",
+    ["metatable·probe·identifier"] = "mtprobe",
+    ["quit·probe·identifier"] = "quitprobe",
+    ["quit·error·identifier"] = "quiterr",
+    ["probe·function·identifier"] = "f",
+    ["first·value·identifier"] = "a",
+    ["second·value·identifier"] = "b",
   },
+
+  ["identifier·aliases"] = {},
 }

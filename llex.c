@@ -163,32 +163,40 @@ static void add_locale_keyword_symbol (lua_State *L, const char *key,
   }
 }
 
-static void add_locale_name_alias (lua_State *L, const char *key,
-                                   const char *fallback_name) {
-  const char *s = locale_get(L, "aliases", key, "");
-  if (s[0] != '\0' && strcmp(s, fallback_name) != 0 &&
-      !starts_ascii_identifier(s)) {
+static void add_identifier_alias_pair (const char *alias,
+                                       const char *canonical_name) {
+  if (alias[0] != '\0' && canonical_name[0] != '\0' &&
+      strcmp(alias, canonical_name) != 0 &&
+      !starts_ascii_identifier(alias)) {
     lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
-    locale_ops[locale_ops_n].bytes = s;
-    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].bytes = alias;
+    locale_ops[locale_ops_n].len = strlen(alias);
     locale_ops[locale_ops_n].token = TK_NAME;
-    locale_ops[locale_ops_n].name = fallback_name;
+    locale_ops[locale_ops_n].name = canonical_name;
     locale_ops_n++;
   }
 }
 
-static void add_locale_internal_name_alias (lua_State *L, const char *key,
-                                            const char *fallback_name) {
-  const char *s = locale_get(L, "internals", key, fallback_name);
-  if (s[0] != '\0' && strcmp(s, fallback_name) != 0 &&
-      !starts_ascii_identifier(s)) {
-    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
-    locale_ops[locale_ops_n].bytes = s;
-    locale_ops[locale_ops_n].len = strlen(s);
-    locale_ops[locale_ops_n].token = TK_NAME;
-    locale_ops[locale_ops_n].name = fallback_name;
-    locale_ops_n++;
+/*
+** Locale-provided runtime identifier aliases: table mapping alias -> canonical
+** (for example: ["🎯"] = "assert", ["🌐"] = "_G").
+*/
+static void add_locale_identifier_aliases (lua_State *L) {
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, "identifier·aliases") == LUA_TTABLE) {
+    lua_pushnil(L);
+    while (lua_next(L, -2) != 0) {
+      if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TSTRING) {
+        const char *alias = lua_tostring(L, -2);
+        const char *canonical = lua_tostring(L, -1);
+        if (alias != NULL && canonical != NULL)
+          add_identifier_alias_pair(alias, canonical);
+      }
+      lua_pop(L, 1);
+    }
   }
+  lua_settop(L, top);
 }
 
 static void add_ignored_layout_glyph (const char *bytes) {
@@ -313,30 +321,7 @@ void luaX_setlocale (lua_State *L) {
   add_locale_op(L, "bitwise·negation", "~", '~');
   add_locale_op(L, "field·access·operator", ".", '.');
   add_locale_op(L, "method·invocation·operator", ":", ':');
-  add_locale_name_alias(L, "assertion·guard", "assert");
-  add_locale_name_alias(L, "mode·identifier", "mode");
-  add_locale_name_alias(L, "argument·table·identifier", "arg");
-  add_locale_name_alias(L, "type·inspector", "type");
-  add_locale_name_alias(L, "os·library·identifier", "os");
-  add_locale_name_alias(L, "os·exit·method", "exit");
-  add_locale_name_alias(L, "raw·getter", "rawget");
-  add_locale_name_alias(L, "raw·setter", "rawset");
-  add_locale_name_alias(L, "metatable·getter", "getmetatable");
-  add_locale_name_alias(L, "metatable·setter", "setmetatable");
-  add_locale_name_alias(L, "debug·uservalue·getter", "getuservalue");
-  add_locale_name_alias(L, "debug·uservalue·setter", "setuservalue");
-  add_locale_name_alias(L, "debug·hook·getter", "gethook");
-  add_locale_name_alias(L, "debug·hook·setter", "sethook");
-  add_locale_name_alias(L, "debug·local·getter", "getlocal");
-  add_locale_name_alias(L, "debug·local·setter", "setlocal");
-  add_locale_name_alias(L, "debug·upvalue·getter", "getupvalue");
-  add_locale_name_alias(L, "debug·upvalue·setter", "setupvalue");
-  add_locale_name_alias(L, "debug·registry·getter", "getregistry");
-  add_locale_name_alias(L, "debug·info·getter", "getinfo");
-  add_locale_name_alias(L, "os·env·getter", "getenv");
-  add_locale_name_alias(L, "os·locale·setter", "setlocale");
-  add_locale_name_alias(L, "io·buffer·setter", "setvbuf");
-  add_locale_internal_name_alias(L, "global·table·identifier", "_G");
+  add_locale_identifier_aliases(L);
   add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
     add_locale_keyword_symbol(L, keyword_keys[i], luaX_default_tokens[i],
@@ -907,20 +892,23 @@ static size_t utf8seqlen (unsigned char c1) {
 
 static utf8proc_int32_t current_utf8_codepoint (LexState *ls, size_t *nbytes) {
   unsigned char bytes[4];
-  unsigned char c1;
-  size_t len, avail;
+  size_t i, got = 0, len;
   utf8proc_int32_t codepoint;
   utf8proc_ssize_t nread;
   if (ls->current == EOZ)
     return -1;
-  c1 = cast_uchar(ls->current);
-  bytes[0] = c1;
-  bytes[1] = (ls->z->n > 0) ? cast_uchar(ls->z->p[0]) : 0;
-  bytes[2] = (ls->z->n > 1) ? cast_uchar(ls->z->p[1]) : 0;
-  bytes[3] = (ls->z->n > 2) ? cast_uchar(ls->z->p[2]) : 0;
-  len = utf8seqlen(c1);
-  avail = cast_sizet(1) + ls->z->n;
-  if (avail < len)
+  bytes[got++] = cast_uchar(ls->current);
+  len = utf8seqlen(bytes[0]);
+  while (got < len) {
+    next(ls);
+    if (ls->current == EOZ)
+      break;
+    bytes[got++] = cast_uchar(ls->current);
+  }
+  for (i = got; i > 1; i--)
+    pushchar(ls, bytes[i - 1]);
+  ls->current = bytes[0];
+  if (got < len)
     return -1;
   nread = utf8proc_iterate(bytes, cast(utf8proc_ssize_t, len), &codepoint);
   if (nread < 0)
