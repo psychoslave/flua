@@ -248,9 +248,9 @@ local locale = {
   diagnostics = {
     -- no such thing as numeric sequence construction where the sequence is not admitted to the language set.
     ["malformed·numeral"] = "⚠ ⚫🏭🔢(🏗️🔢∧(🔢⛔🎨))",
-    -- Formal: ∄construction(string) ∧ open-quote ∧ ¬close‑quote
-    -- no valid string construct can keep an opening quote without closure.
-    ["unfinished·string"] = "⚠ ⚫🏭🔗:(🏗🔗∧📭🔣＂ ∧ ¬📪🔣＂)",
+    -- Formal: ∄factory(string) : construct(string) ∧ open-quote ∧ ¬close‑quote
+    -- no such with as a construct of a string with opening quote and no closing quote.
+    ["unfinished·string"] = "⚠ ⚫🏭🔗:(️🏗🔗∧📭🔣＂ ∧ ¬📪🔣＂)",
     -- Keep syntax errors dense while avoiding letter-derived glyphs.
     ["generic·syntax·error"] = "⚠ ⚫(🖌📤🎨) ∧ 🖼️ ⊬ ⟨…=…⟩",
     -- Keep unexpected-symbol diagnostics explicit with non-letter symbolism.
