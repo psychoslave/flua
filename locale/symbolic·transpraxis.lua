@@ -21,6 +21,14 @@ Extended metaphors:
   Loop-orientation congruence:
     clockwise marks forward/pre-check iteration flow (♺, ↻)
     counterclockwise marks post-check termination/back-edge (↺)
+  Punctuation congruence:
+    syntagmatic separators are expressed with fleurons (☙, ❦).
+    Dot and colons are excluded: in Lua they primarily serve polymorphem
+    agglutination (field/method/token binding), not syntagm separation.
+    Straight quotes are fullwidth aliases (＂, ＇) purely to exercise
+    codepoint aliasing in demos/tests; not for new semantics.
+    Brackets are deliberately mapped to squarish forms for a shared visual
+    family across grouping, indexing, and constructor delimiters.
   Branch-tree symbols:⁴
     ┬ = if branch root/condition head
     ├ = elseif branch continuation
@@ -153,16 +161,33 @@ local locale = {
   },
 
   delimiters = {
-    ["expression·grouping·opening"] = "(",
-    ["expression·grouping·closing"] = ")",
-    ["index·opening"] = "[",
-    ["index·closing"] = "]",
-    ["constructor·opening"] = "{",
-    ["constructor·closing"] = "}",
-    ["element·separator"] = ",",
-    ["statement·separator"] = ";",
-    ["string·delimiter"] = "\"",
-    ["string·delimiter·alternate"] = "'",
+    -- 【】 merge square/round visual cues; kept for classic expression grouping.
+    ["expression·grouping·opening"] = "【",
+    ["expression·grouping·closing"] = "】",
+    -- ⟦⟧ align indexing with denotational-bracket semantics already in use.
+    ["index·opening"] = "⟦",
+    ["index·closing"] = "⟧",
+    -- ⁅⁆ echo dictionary-style supplemental enclosure; acceptable fit for Lua
+    -- table constructors (associative/hash structures, not pure set literals).
+    ["constructor·opening"] = "⁅",
+    ["constructor·closing"] = "⁆",
+    -- ☙ is retained as list separator because it is a documented bullet form⁵,
+    -- points back to the previous item (matching Lua's trailing-comma legality),
+    -- and avoids the leading-item semantics of `•` (Lua rejects leading commas).
+    ["element·separator"] = "☙",
+    -- ❦ is retained for statement separation: Lua allows both leading and
+    -- trailing semicolons, so a bilateral connector fits better than 𐡸.
+    -- Its waved/swung form evokes a tilde-like "soft relation", mirroring how
+    -- semicolons link independent execution blocks that remain syntactically
+    -- separate yet pragmatically related.
+    ["statement·separator"] = "❦",
+    -- Lexer inquiry outcome: short strings opened by " or ' and long strings
+    -- opened by [[...]] are distinct lexical paths, but all return TK_STRING.
+    -- Therefore we keep straight/neutral quote semantics and only swap codepoint:
+    -- Unicode offers fullwidth straight alternates (＂ U+FF02, ＇ U+FF07),
+    -- which are used here solely for thorough alias testing/demo coverage.
+    ["string·delimiter"] = "＂",
+    ["string·delimiter·alternate"] = "＇",
   },
 
   attributes = {
@@ -226,3 +251,4 @@ return locale
 -- ² https://en.wikipedia.org/wiki/Assignment_(computer_science)#Notation
 -- ³ https://en.wikipedia.org/wiki/Media_controls
 -- ⁴ https://en.wikipedia.org/wiki/Begriffsschrift
+-- ⁵ https://en.wikipedia.org/wiki/Bullet_(typography)#In_Unicode

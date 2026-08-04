@@ -12,10 +12,19 @@
   ▶️
     📍 f, err ← load("z=7")
     assert(f ＝ nil and type(err) ＝ "string")
-    assert(string‐find(err, "⚠", 1, true))
+    assert(string‐find(err, "σ ∉ Σ", 1, true))
   ∎
 └
   error("invalid mode")
+∎
+
+□ expect_fail(src, needle)
+  📍 f, err ← load(src)
+  assert(f ＝ nil and type(err) ＝ "string")
+  ┬ needle ≠ nil ∴
+    assert(string‐find(err, needle, 1, true))
+  ∎
+  ⏫ err
 ∎
 
 a ← 1
@@ -27,6 +36,7 @@ assert(b ＝ 5)
 assert(41 ≠ 42)
 assert(2 ≤ 3 ∧ 4 ≥ 4)
 assert(2 ﹤ 3 ∧ 4 ﹥ 3)
+assert((⊤ ∨ ⊥) ∧ (¬⊥) ∧ (∅ ＝ nil))
 assert(7 ÷ 2 ＝ 3)
 assert(7 ∕ 2 ＝ 3.5)
 assert(2 ↑ 3 ＝ 8)
@@ -35,9 +45,7 @@ assert(1 ≪ 3 ＝ 8)
 assert(8 ≫ 1 ＝ 4)
 
 ▶️
-  📍 f, err ← load("📍 x =")
-  assert(f ＝ nil and type(err) ＝ "string")
-  assert(string‐find(err, "⚠", 1, true))
+  expect_fail("global g = 7", "∄π∈Π")
 ∎
 
 ▶️
@@ -46,6 +54,17 @@ assert(8 ≫ 1 ＝ 4)
     sum ← sum ＋ v
   ∎
   assert(sum ＝ 6)
+∎
+
+▶️
+  📍 k ← 0
+  ↻ ⊤ ▶️
+    k ← k ＋ 1
+    ┬ k ＝ 2 ∴
+      🔽
+    ∎
+  ∎
+  assert(k ＝ 2)
 ∎
 
 ▶️
@@ -75,8 +94,21 @@ assert(sqr(3) ＝ 9)
 assert(argc(1, 2, 3) ＝ 3)
 
 ┬ mode ＝ "default" ∴
-  📍 f ← assert(load("📍 arr ← {1, 2, 3}; assert(#arr ＝ 3)"))
-  f()
+  assert(𐄹{1, 2, 3} ＝ 3)
+
+  📍 locale ← require("locale.symbolic·transpraxis")
+  📍 env_expected ← locale‐internals["environment·identifier"]
+  📍 self_expected ← locale‐internals["implicit·self·parameter"]
+  📍 g ← assert(load("return 1"))
+  📍 env ← debug‐getupvalue(g, 1)
+  assert(env ＝ env_expected)
+
+  📍 t ← {}
+  □ t–id(x)
+    ⏫ x
+  ∎
+  📍 selfname ← debug‐getlocal(t‐id, 1)
+  assert(selfname ＝ self_expected)
 ∎
 
 print("symbolic-locale-ok")

@@ -120,6 +120,20 @@ local function main()
   end
 
   if not must_run(
+      "Test symbolic lexer-phase gaps",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua testes/symbolic-locale-lexer-phase.lua]],
+      20) then
+    return 1
+  end
+
+  if not must_run(
+      "Test symbolic parser-phase gaps",
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua testes/symbolic-locale-parser-phase.lua]],
+      20) then
+    return 1
+  end
+
+  if not must_run(
       "Test symbolic locale plain mode (-P)",
       [[LUA_LOCALE='symbolic·transpraxis' ./lua -P testes/symbolic-locale.lua plain]],
       20) then
