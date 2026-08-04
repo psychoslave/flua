@@ -12,7 +12,7 @@
   ▶️
     📍 f, err ← load("z=7")
     assert(f ＝ nil and type(err) ＝ "string")
-    assert(string‐find(err, "σ ∉ Σ", 1, true))
+    assert(string‐find(err, "(💬⛔💭)", 1, true))
   ∎
 └
   error("invalid mode")
@@ -45,7 +45,7 @@ assert(1 ≪ 3 ＝ 8)
 assert(8 ≫ 1 ＝ 4)
 
 ▶️
-  expect_fail("global g = 7", "∄π∈Π")
+  expect_fail("global g = 7", "⚫(")
 ∎
 
 ▶️

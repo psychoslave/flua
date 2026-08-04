@@ -29,6 +29,23 @@ Extended metaphors:
     codepoint aliasing in demos/tests; not for new semantics.
     Brackets are deliberately mapped to squarish forms for a shared visual
     family across grouping, indexing, and constructor delimiters.
+  Diagnostics avoid classic letter-derived math glyphs in the domain such as ∃, ∄, ∈, ∉, π, Π, Γ, σ, Σ
+  through two main extended metaphors.
+  Painting metaphor:
+     🖌️ proposition rather than π;
+     🎨 set of all possible propositions rather than Π;
+     🖼️ frames derivation/context, rather than Γ.
+  Membership metaphor:
+     📤 is used as inclusion gesture, rather than ∈;
+     ⛔ for explicit non-membership, rather than ∉.
+  Discourse metaphor:
+    💬 symbol rather than σ;
+    💭 set of all possible symbols rather than Σ;
+    🔣 marks an explicit symbol-token focus (escape-level symbol marker).
+  Cosmologic metaphor:
+     ⚛️ atomic existence holds, rather than ∃;
+     🌌 universal existence holds, rather than ∀;
+     ⚫ no such instance in this cosmos, rather than ∄.
   Branch-tree symbols:⁴
     ┬ = if branch root/condition head
     ├ = elseif branch continuation
@@ -219,7 +236,8 @@ local locale = {
       "  -         stop handling options and execute stdin\n",
     -- ⌁ is used as an EOT/EOF-style marker in this symbolic locale.
     ["incomplete·input·marker"] = "⌁",
-    -- 🎞️ marks streamed interactive input source.
+    -- 🎞️ fits interactive input as a fed stream: a reel/tape carrying symbols
+    -- into the machine, matching the classic Turing-style input-tape image.
     ["interactive·source·identity"] = "🎞️",
     -- ≜ marks command-line chunks as explicit definitions.
     ["commandline·source·identity"] = "≜",
@@ -228,10 +246,15 @@ local locale = {
   },
 
   diagnostics = {
-    -- Keep syntax errors denser but still hint at failed derivability.
-    ["generic·syntax·error"] = "⚠ ∄π∈Π : Γ ⊢ ⟨…=…⟩",
-    -- Keep unexpected-symbol diagnostics explicit about symbol-set mismatch.
-    ["unexpected·symbol"] = "⚠ (σ ∉ Σ) ∧ Γ ⊬ ⟨…⇔…⟩",
+    -- no such thing as numeric sequence construction where the sequence is not admitted to the language set.
+    ["malformed·numeral"] = "⚠ ⚫🏭🔢(🏗️🔢∧(🔢⛔🎨))",
+    -- Formal: ∄construction(string) ∧ open-quote ∧ ¬close‑quote
+    -- no valid string construct can keep an opening quote without closure.
+    ["unfinished·string"] = "⚠ ⚫🏭🔗:(🏗🔗∧📭🔣＂ ∧ ¬📪🔣＂)",
+    -- Keep syntax errors dense while avoiding letter-derived glyphs.
+    ["generic·syntax·error"] = "⚠ ⚫(🖌📤🎨) ∧ 🖼️ ⊬ ⟨…=…⟩",
+    -- Keep unexpected-symbol diagnostics explicit with non-letter symbolism.
+    ["unexpected·symbol"] = "⚠ (💬⛔💭) ∧ 🖼️ ⊬ ⟨…⇔…⟩",
   },
 
   internals = {
