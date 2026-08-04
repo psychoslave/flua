@@ -63,6 +63,8 @@ typedef struct Token {
    functions */
 typedef struct LexState {
   int current;  /* current character (charint) */
+  int npushed;  /* number of pushed-back bytes in lexer stream */
+  unsigned char pushed[64];  /* pushed-back bytes (LIFO) */
   int linenumber;  /* input line counter */
   int lastline;  /* line of last token 'consumed' */
   Token t;  /* current token */

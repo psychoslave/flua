@@ -30,7 +30,23 @@
 
 
 
-#define next(ls)	(ls->current = zgetc(ls->z))
+static int nextchar (LexState *ls) {
+  if (ls->npushed > 0) {
+    ls->current = ls->pushed[--ls->npushed];
+    return ls->current;
+  }
+  ls->current = zgetc(ls->z);
+  return ls->current;
+}
+
+static void pushchar (LexState *ls, int c) {
+  if (c == EOZ)
+    return;
+  lua_assert(ls->npushed < cast_int(sizeof(ls->pushed) / sizeof(ls->pushed[0])));
+  ls->pushed[ls->npushed++] = cast_uchar(c);
+}
+
+#define next(ls)	(nextchar(ls))
 
 
 /* minimum size for string buffer */
@@ -424,6 +440,7 @@ void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source,
   ls->t.token = 0;
   ls->L = L;
   ls->current = firstchar;
+  ls->npushed = 0;
   ls->lookahead.token = TK_EOS;  /* no look-ahead token */
   ls->z = z;
   ls->fs = NULL;
@@ -493,29 +510,58 @@ static int skip_decorative_layout_glyph (LexState *ls) {
 
 static int try_locale_operator (LexState *ls, SemInfo *seminfo) {
   int i, besttok = 0;
-  size_t bestlen = 0;
+  int cafter = EOZ;
+  size_t n = 0, bestlen = 0, maxlen = 0;
+  unsigned char consumed[64];
   const LocaleOp *bestop = NULL;
   if (ls->current == EOZ)
     return 0;
   for (i = 0; i < locale_ops_n; i++) {
     const LocaleOp *op = &locale_ops[i];
-    if (cast_uchar(op->bytes[0]) != ls->current)
-      continue;
-    if ((op->len == 1 ||
-         (ls->z->n >= op->len - 1 &&
-          memcmp(ls->z->p, op->bytes + 1, op->len - 1) == 0)) &&
-        op->len > bestlen) {
-      bestlen = op->len;
-      besttok = op->token;
-      bestop = op;
+    if (op->len > maxlen)
+      maxlen = op->len;
+  }
+  if (maxlen > sizeof(consumed))
+    maxlen = sizeof(consumed);
+  while (ls->current != EOZ && n < maxlen) {
+    int has_prefix = 0;
+    consumed[n] = cast_uchar(ls->current);
+    for (i = 0; i < locale_ops_n; i++) {
+      const LocaleOp *op = &locale_ops[i];
+      if (op->len < n + 1)
+        continue;
+      if (memcmp(op->bytes, consumed, n + 1) == 0) {
+        has_prefix = 1;
+        if (op->len == n + 1 && op->len > bestlen) {
+          bestlen = op->len;
+          besttok = op->token;
+          bestop = op;
+        }
+      }
     }
+    if (!has_prefix)
+      break;
+    n++;
+    next(ls);
   }
   if (besttok != 0 && bestop != NULL) {
-    for (i = 0; i < cast_int(bestlen); i++)
+    if (n > bestlen) {  /* rollback bytes consumed while probing longer prefixes */
+      cafter = ls->current;
+      pushchar(ls, cafter);
+      for (i = cast_int(n); i > cast_int(bestlen); i--)
+        pushchar(ls, consumed[i - 1]);
       next(ls);
+    }
     if (besttok == TK_NAME && bestop->name != NULL && seminfo != NULL)
       seminfo->ts = luaX_newstring(ls, bestop->name, strlen(bestop->name));
     return besttok;
+  }
+  if (n > 0) {  /* no match; restore consumed probe bytes */
+    cafter = ls->current;
+    pushchar(ls, cafter);
+    for (i = cast_int(n); i > 0; i--)
+      pushchar(ls, consumed[i - 1]);
+    next(ls);
   }
   return 0;
 }
