@@ -22,6 +22,23 @@
 #include "lualib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 
 /*
 ** {==================================================================
@@ -394,15 +411,28 @@ static int os_setlocale (lua_State *L) {
 
 
 static int os_exit (lua_State *L) {
+  int first = 1;
   int status;
-  if (lua_isboolean(L, 1))
-    status = (lua_toboolean(L, 1) ? EXIT_SUCCESS : EXIT_FAILURE);
+  if (lua_type(L, 1) == LUA_TTABLE)
+    first = 2;  /* allow method-style call: os:exit(code, close) */
+  if (lua_isboolean(L, first))
+    status = (lua_toboolean(L, first) ? EXIT_SUCCESS : EXIT_FAILURE);
   else
-    status = (int)luaL_optinteger(L, 1, EXIT_SUCCESS);
-  if (lua_toboolean(L, 2))
+    status = (int)luaL_optinteger(L, first, EXIT_SUCCESS);
+  if (lua_toboolean(L, first + 1))
     lua_close(L);
   if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */
   return 0;
+}
+
+static int os_exit_alias (lua_State *L) {
+  if (lua_gettop(L) >= 1) {
+    lua_pushvalue(L, lua_upvalueindex(1));  /* os table */
+    if (lua_rawequal(L, 1, -1))
+      lua_remove(L, 1);  /* remove implicit self from method call */
+    lua_pop(L, 1);
+  }
+  return os_exit(L);
 }
 
 
@@ -426,7 +456,13 @@ static const luaL_Reg syslib[] = {
 
 
 LUAMOD_API int luaopen_os (lua_State *L) {
+  const char *exit_alias;
   luaL_newlib(L, syslib);
+  exit_alias = locale_get(L, "aliases", "os·exit·method", "exit");
+  if (exit_alias[0] != '\0' && strcmp(exit_alias, "exit") != 0) {
+    lua_pushvalue(L, -1);  /* upvalue: os table */
+    lua_pushcclosure(L, os_exit_alias, 1);
+    lua_setfield(L, -2, exit_alias);
+  }
   return 1;
 }
-

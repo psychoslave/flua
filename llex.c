@@ -177,6 +177,20 @@ static void add_locale_name_alias (lua_State *L, const char *key,
   }
 }
 
+static void add_locale_internal_name_alias (lua_State *L, const char *key,
+                                            const char *fallback_name) {
+  const char *s = locale_get(L, "internals", key, fallback_name);
+  if (s[0] != '\0' && strcmp(s, fallback_name) != 0 &&
+      !starts_ascii_identifier(s)) {
+    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
+    locale_ops[locale_ops_n].bytes = s;
+    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].token = TK_NAME;
+    locale_ops[locale_ops_n].name = fallback_name;
+    locale_ops_n++;
+  }
+}
+
 static void add_ignored_layout_glyph (const char *bytes) {
   int i;
   size_t len = strlen(bytes);
@@ -303,6 +317,26 @@ void luaX_setlocale (lua_State *L) {
   add_locale_name_alias(L, "mode·identifier", "mode");
   add_locale_name_alias(L, "argument·table·identifier", "arg");
   add_locale_name_alias(L, "type·inspector", "type");
+  add_locale_name_alias(L, "os·library·identifier", "os");
+  add_locale_name_alias(L, "os·exit·method", "exit");
+  add_locale_name_alias(L, "raw·getter", "rawget");
+  add_locale_name_alias(L, "raw·setter", "rawset");
+  add_locale_name_alias(L, "metatable·getter", "getmetatable");
+  add_locale_name_alias(L, "metatable·setter", "setmetatable");
+  add_locale_name_alias(L, "debug·uservalue·getter", "getuservalue");
+  add_locale_name_alias(L, "debug·uservalue·setter", "setuservalue");
+  add_locale_name_alias(L, "debug·hook·getter", "gethook");
+  add_locale_name_alias(L, "debug·hook·setter", "sethook");
+  add_locale_name_alias(L, "debug·local·getter", "getlocal");
+  add_locale_name_alias(L, "debug·local·setter", "setlocal");
+  add_locale_name_alias(L, "debug·upvalue·getter", "getupvalue");
+  add_locale_name_alias(L, "debug·upvalue·setter", "setupvalue");
+  add_locale_name_alias(L, "debug·registry·getter", "getregistry");
+  add_locale_name_alias(L, "debug·info·getter", "getinfo");
+  add_locale_name_alias(L, "os·env·getter", "getenv");
+  add_locale_name_alias(L, "os·locale·setter", "setlocale");
+  add_locale_name_alias(L, "io·buffer·setter", "setvbuf");
+  add_locale_internal_name_alias(L, "global·table·identifier", "_G");
   add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
     add_locale_keyword_symbol(L, keyword_keys[i], luaX_default_tokens[i],

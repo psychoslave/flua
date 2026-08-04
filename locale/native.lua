@@ -289,4 +289,26 @@ return {
   layout = {
     ["ignored·glyphs"] = {},
   },
+
+  aliases = {
+    ["os·library·identifier"] = "os",
+    ["os·exit·method"] = "exit",
+    ["raw·getter"] = "rawget",
+    ["raw·setter"] = "rawset",
+    ["metatable·getter"] = "getmetatable",
+    ["metatable·setter"] = "setmetatable",
+    ["debug·uservalue·getter"] = "getuservalue",
+    ["debug·uservalue·setter"] = "setuservalue",
+    ["debug·hook·getter"] = "gethook",
+    ["debug·hook·setter"] = "sethook",
+    ["debug·local·getter"] = "getlocal",
+    ["debug·local·setter"] = "setlocal",
+    ["debug·upvalue·getter"] = "getupvalue",
+    ["debug·upvalue·setter"] = "setupvalue",
+    ["debug·registry·getter"] = "getregistry",
+    ["debug·info·getter"] = "getinfo",
+    ["os·env·getter"] = "getenv",
+    ["os·locale·setter"] = "setlocale",
+    ["io·buffer·setter"] = "setvbuf",
+  },
 }

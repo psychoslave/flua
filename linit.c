@@ -13,6 +13,7 @@
 
 
 #include <stddef.h>
+#include <string.h>
 
 #include "lua.h"
 
@@ -40,6 +41,10 @@ static const char *locale_get (lua_State *L,
 
 static const char *locale_global_name (lua_State *L) {
   return locale_get(L, "internals", "global·table·identifier", LUA_GNAME);
+}
+
+static const char *locale_os_name (lua_State *L) {
+  return locale_get(L, "aliases", "os·library·identifier", LUA_OSLIBNAME);
 }
 
 
@@ -73,6 +78,15 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
     const char *name = (mask == LUA_GLIBK) ? locale_global_name(L) : lib->name;
     if (load & mask) {  /* selected? */
       luaL_requiref(L, name, lib->func, 1);  /* require library */
+      if (mask == LUA_OSLIBK) {
+        const char *osname = locale_os_name(L);
+        if (osname[0] != '\0' && strcmp(osname, name) != 0) {
+          lua_pushglobaltable(L);
+          lua_pushvalue(L, -2);  /* library table */
+          lua_setfield(L, -2, osname);
+          lua_pop(L, 1);  /* global table */
+        }
+      }
       lua_pop(L, 1);  /* remove result from the stack */
     }
     else if (preload & mask) {  /* selected? */

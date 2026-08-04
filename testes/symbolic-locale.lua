@@ -1,14 +1,25 @@
 📍 🎚 ← 🎯(🛄[1], "🤷")
 
 ┬ 🎚 ＝ "🏭" ∴
-│ 🎯(🧩(_G) ＝ "🗂️")
-│ 🎯(rawget(_G, "🌐") ＝ _G)
+│ 🎯(🧩(🌐) ＝ "🗂️")
+│ 🎯(⟼(🌐, "🌐") ＝ 🌐)
+│ ▶️
+│  📍 mtprobe ← {}
+│  ⇷(mtprobe, {x ← 7})
+│  🎯(⇸(mtprobe)‐x ＝ 7)
+│ ∎
+│ 🎯(⟼(🌐, "⚙️") ＝ os)
+│ 🎯(🧩(rawget(⚙️, "⏼")) ＝ "function")
+│ ▶️
+│  📍 quitprobe, quiterr ← load("⏫ ⚙️–⏼(0, false)")
+│  🎯(quitprobe ≠ nil ∧ quiterr ＝ nil)
+│ ∎
 │ ▶️
 │  📍 ƒ ← 🎯(load("z=7; ⏫ z"))
 │  🎯(ƒ() ＝ 7)
 │ ∎
 ├ 🎚 ＝ "plain" ∴
-│  🎯(_G ＝ nil)
+│  🎯(🌐 ＝ nil)
 │  ▶️
 │    📍 f, err ← load("z=7")
 │    🎯(f ＝ nil and 🧩(err) ＝ "string")

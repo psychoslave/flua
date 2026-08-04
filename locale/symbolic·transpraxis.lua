@@ -25,6 +25,8 @@ Extended metaphors:
     🛄 aliases arg in tests: argument table as luggage brought into runtime.
     🧩 aliases type: puzzle-piece shape matches classification/fit of values.
     🗂️ labels table type: indexed tabs evoke categorized key/value entries.
+    ⚙️ aliases os: operating-system toolbox namespace.
+    ⏼ aliases exit on os: universal power symbol for shutdown/termination.
   Loop-orientation congruence:
     clockwise marks forward/pre-check iteration flow (♺, ↻)
     counterclockwise marks post-check termination/back-edge (↺)
@@ -289,6 +291,27 @@ local locale = {
     ["argument·table·identifier"] = "🛄",
     -- 🧩 marks value classification as a "fit into a type shape".
     ["type·inspector"] = "🧩",
+    -- ⚙️ maps the OS library to a toolbox-like system namespace symbol.
+    ["os·library·identifier"] = "⚙️",
+    -- ⏼ maps os.exit to the universal power/stop semantic.
+    ["os·exit·method"] = "⏼",
+    ["raw·getter"] = "⟼",
+    ["raw·setter"] = "⟻",
+    ["metatable·getter"] = "⇸",
+    ["metatable·setter"] = "⇷",
+    ["debug·uservalue·getter"] = "↣",
+    ["debug·uservalue·setter"] = "↢",
+    ["debug·hook·getter"] = "↪",
+    ["debug·hook·setter"] = "↩",
+    ["debug·local·getter"] = "⇢",
+    ["debug·local·setter"] = "⇠",
+    ["debug·upvalue·getter"] = "↠",
+    ["debug·upvalue·setter"] = "↞",
+    ["debug·registry·getter"] = "⇾",
+    ["debug·info·getter"] = "⇨",
+    ["os·env·getter"] = "↗",
+    ["os·locale·setter"] = "↙",
+    ["io·buffer·setter"] = "↧",
   },
 
   layout = {
