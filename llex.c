@@ -58,12 +58,15 @@ typedef struct LocaleOp {
   const char *bytes;
   size_t len;
   int token;
+  const char *name;  /* canonical name when token is TK_NAME */
 } LocaleOp;
 
 static LocaleOp locale_ops[96];
 static int locale_ops_n = 0;
 static LocaleOp blocked_native_ops[96];
 static int blocked_native_ops_n = 0;
+static LocaleOp ignored_layout_glyphs[32];
+static int ignored_layout_glyphs_n = 0;
 static int plain_locale_mode = 0;
 
 
@@ -106,6 +109,7 @@ static void add_blocked_native_op (const char *bytes) {
   blocked_native_ops[blocked_native_ops_n].bytes = bytes;
   blocked_native_ops[blocked_native_ops_n].len = len;
   blocked_native_ops[blocked_native_ops_n].token = 0;
+  blocked_native_ops[blocked_native_ops_n].name = NULL;
   blocked_native_ops_n++;
 }
 
@@ -117,6 +121,7 @@ static void add_locale_op (lua_State *L, const char *key,
     locale_ops[locale_ops_n].bytes = s;
     locale_ops[locale_ops_n].len = strlen(s);
     locale_ops[locale_ops_n].token = token;
+    locale_ops[locale_ops_n].name = NULL;
     locale_ops_n++;
     if (plain_locale_mode)
       add_blocked_native_op(fallback);
@@ -136,8 +141,62 @@ static void add_locale_keyword_symbol (lua_State *L, const char *key,
     locale_ops[locale_ops_n].bytes = s;
     locale_ops[locale_ops_n].len = strlen(s);
     locale_ops[locale_ops_n].token = token;
+    locale_ops[locale_ops_n].name = NULL;
     locale_ops_n++;
   }
+}
+
+static void add_locale_name_alias (lua_State *L, const char *key,
+                                   const char *fallback_name) {
+  const char *s = locale_get(L, "aliases", key, "");
+  if (s[0] != '\0' && strcmp(s, fallback_name) != 0 &&
+      !starts_ascii_identifier(s)) {
+    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
+    locale_ops[locale_ops_n].bytes = s;
+    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].token = TK_NAME;
+    locale_ops[locale_ops_n].name = fallback_name;
+    locale_ops_n++;
+  }
+}
+
+static void add_ignored_layout_glyph (const char *bytes) {
+  int i;
+  size_t len = strlen(bytes);
+  if (len == 0)
+    return;
+  for (i = 0; i < ignored_layout_glyphs_n; i++) {
+    if (ignored_layout_glyphs[i].len == len &&
+        memcmp(ignored_layout_glyphs[i].bytes, bytes, len) == 0)
+      return;
+  }
+  lua_assert(ignored_layout_glyphs_n <
+             cast_int(sizeof(ignored_layout_glyphs) /
+                      sizeof(ignored_layout_glyphs[0])));
+  ignored_layout_glyphs[ignored_layout_glyphs_n].bytes = bytes;
+  ignored_layout_glyphs[ignored_layout_glyphs_n].len = len;
+  ignored_layout_glyphs[ignored_layout_glyphs_n].token = 0;
+  ignored_layout_glyphs[ignored_layout_glyphs_n].name = NULL;
+  ignored_layout_glyphs_n++;
+}
+
+static void add_locale_ignored_layout_glyphs (lua_State *L) {
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, "layout") == LUA_TTABLE &&
+      lua_getfield(L, -1, "ignored·glyphs") == LUA_TTABLE) {
+    lua_Unsigned i;
+    lua_Unsigned n = lua_rawlen(L, -1);
+    for (i = 1; i <= n; i++) {
+      if (lua_rawgeti(L, -1, i) == LUA_TSTRING) {
+        const char *s = lua_tostring(L, -1);
+        if (s != NULL && s[0] != '\0')
+          add_ignored_layout_glyph(s);
+      }
+      lua_pop(L, 1);
+    }
+  }
+  lua_settop(L, top);
 }
 
 
@@ -196,6 +255,7 @@ void luaX_setlocale (lua_State *L) {
                luaX_tokens[cast_int(TK_EOS - FIRST_RESERVED)]);
   locale_ops_n = 0;
   blocked_native_ops_n = 0;
+  ignored_layout_glyphs_n = 0;
   add_locale_op(L, "variadic·expansion", "...", TK_DOTS);
   add_locale_op(L, "concatenation·operator", "..", TK_CONCAT);
   add_locale_op(L, "label·delimiter", "::", TK_DBCOLON);
@@ -222,6 +282,11 @@ void luaX_setlocale (lua_State *L) {
   add_locale_op(L, "bitwise·negation", "~", '~');
   add_locale_op(L, "field·access·operator", ".", '.');
   add_locale_op(L, "method·invocation·operator", ":", ':');
+  add_locale_name_alias(L, "assertion·guard", "assert");
+  add_locale_name_alias(L, "mode·identifier", "mode");
+  add_locale_name_alias(L, "argument·table·identifier", "arg");
+  add_locale_name_alias(L, "type·inspector", "type");
+  add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
     add_locale_keyword_symbol(L, keyword_keys[i], luaX_default_tokens[i],
                               FIRST_RESERVED + i);
@@ -403,9 +468,32 @@ static int check_next1 (LexState *ls, int c) {
   else return 0;
 }
 
-static int try_locale_operator (LexState *ls) {
+/*
+** Locale-defined decorative glyphs may behave like layout whitespace in source
+** code (for visual structures such as branch trees).
+*/
+static int skip_decorative_layout_glyph (LexState *ls) {
+  int i;
+  for (i = 0; i < ignored_layout_glyphs_n; i++) {
+    const LocaleOp *op = &ignored_layout_glyphs[i];
+    if (cast_uchar(op->bytes[0]) != ls->current)
+      continue;
+    if (op->len == 1 ||
+        (ls->z->n >= op->len - 1 &&
+         memcmp(ls->z->p, op->bytes + 1, op->len - 1) == 0)) {
+      int j;
+      for (j = 0; j < cast_int(op->len); j++)
+        next(ls);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+static int try_locale_operator (LexState *ls, SemInfo *seminfo) {
   int i, besttok = 0;
   size_t bestlen = 0;
+  const LocaleOp *bestop = NULL;
   if (ls->current == EOZ)
     return 0;
   for (i = 0; i < locale_ops_n; i++) {
@@ -418,11 +506,14 @@ static int try_locale_operator (LexState *ls) {
         op->len > bestlen) {
       bestlen = op->len;
       besttok = op->token;
+      bestop = op;
     }
   }
-  if (besttok != 0) {
+  if (besttok != 0 && bestop != NULL) {
     for (i = 0; i < cast_int(bestlen); i++)
       next(ls);
+    if (besttok == TK_NAME && bestop->name != NULL && seminfo != NULL)
+      seminfo->ts = luaX_newstring(ls, bestop->name, strlen(bestop->name));
     return besttok;
   }
   return 0;
@@ -694,6 +785,11 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
             goto no_save;
           }
           default: {
+            if (cast_uchar(ls->current) >= 0x80) {
+              /* Allow escaped UTF-8 symbols (e.g. "\│") as literal bytes. */
+              c = ls->current;
+              goto read_save;
+            }
             esccheck(ls, lisdigit(ls->current),
                         locale_get(ls->L, "diagnostics",
                                    "invalid·escape·sequence",
@@ -724,11 +820,13 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
+    if (skip_decorative_layout_glyph(ls))
+      continue;
     if (is_blocked_native_operator(ls))
       lexerror(ls, locale_get(ls->L, "diagnostics",
                               "unexpected·symbol", "unexpected symbol"),
                ls->current);
-    int lop = try_locale_operator(ls);
+    int lop = try_locale_operator(ls, seminfo);
     if (lop != 0)
       return lop;
     switch (ls->current) {

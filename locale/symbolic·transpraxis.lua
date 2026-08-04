@@ -18,6 +18,13 @@ Extended metaphors:
     🔁 = repeat cycle (loop icon)³
     ⏫ = return result upward (fast-up/emit)³
     ⏭️ = goto jump (skip to next marked point)³
+  Target metaphor:
+    🎯 aliases assert: the dart is expected to reach the target.
+    🎚 aliases mode in tests: slider semantics match a selected run mode.
+    🏭 denotes factory mode: default state as a device leaving factory settings.
+    🛄 aliases arg in tests: argument table as luggage brought into runtime.
+    🧩 aliases type: puzzle-piece shape matches classification/fit of values.
+    🗂️ labels table type: indexed tabs evoke categorized key/value entries.
   Loop-orientation congruence:
     clockwise marks forward/pre-check iteration flow (♺, ↻)
     counterclockwise marks post-check termination/back-edge (↺)
@@ -50,6 +57,8 @@ Extended metaphors:
     ┬ = if branch root/condition head
     ├ = elseif branch continuation
     └ = else fallback branch
+    │ and ┴ are decorative tree layout glyphs ignored by lexer when listed in
+    layout.ignored·glyphs.
   Bitwise circled family:
     bitwise ops are mapped to circled counterparts when available
     (⊗, ⊙, ⊕, ⊝) to stay visually close to logic symbols.
@@ -214,6 +223,11 @@ local locale = {
     ["closure·attribute"] = "🔒",
   },
 
+  types = {
+    -- 🗂️ captures "table" as a structured collection of keyed entries.
+    ["table·type·name"] = "🗂️",
+  },
+
   repl = {
     -- ✏ is a pencil at rest: inviting the first line.
     ["primary·prompt"] = "✏ ",
@@ -264,6 +278,22 @@ local locale = {
     ["global·table·identifier"] = "🌐",
     -- 🪞 suggests reflective self-reference for method receiver.
     ["implicit·self·parameter"] = "🪞",
+  },
+
+  aliases = {
+    -- 🎯 is expected to hit target truth; it aliases assert().
+    ["assertion·guard"] = "🎯",
+    -- 🎚 selects/holds run mode in tests without changing language keywords.
+    ["mode·identifier"] = "🎚",
+    -- 🛄 carries invocation arguments into the running chunk.
+    ["argument·table·identifier"] = "🛄",
+    -- 🧩 marks value classification as a "fit into a type shape".
+    ["type·inspector"] = "🧩",
+  },
+
+  layout = {
+    -- Decorative branch-tree connectors accepted as ignorable layout glyphs.
+    ["ignored·glyphs"] = { "│", "┴" },
   },
 }
 

@@ -292,7 +292,12 @@ static int luaB_collectgarbage (lua_State *L) {
 static int luaB_type (lua_State *L) {
   int t = lua_type(L, 1);
   luaL_argcheck(L, t != LUA_TNONE, 1, "value expected");
-  lua_pushstring(L, lua_typename(L, t));
+  {
+    const char *name = lua_typename(L, t);
+    if (t == LUA_TTABLE)
+      name = locale_get(L, "types", "table·type·name", name);
+    lua_pushstring(L, name);
+  }
   return 1;
 }
 

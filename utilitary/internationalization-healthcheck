@@ -107,7 +107,7 @@ local function main()
 
   if not must_run(
       "Test symbolic locale default mode",
-      [[LUA_LOCALE='symbolic·transpraxis' ./lua testes/symbolic-locale.lua default]],
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua testes/symbolic-locale.lua 🏭]],
       20) then
     return 1
   end

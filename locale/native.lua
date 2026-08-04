@@ -75,6 +75,10 @@ return {
     ["closure·attribute"] = "close",
   },
 
+  types = {
+    ["table·type·name"] = "table",
+  },
+
   repl = {
     ["primary·prompt"] = "> ",
     ["continuation·prompt"] = ">> ",
@@ -280,5 +284,9 @@ return {
     ["environment·identifier"] = "_ENV",
     ["global·table·identifier"] = "_G",
     ["implicit·self·parameter"] = "self",
+  },
+
+  layout = {
+    ["ignored·glyphs"] = {},
   },
 }
