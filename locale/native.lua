@@ -79,6 +79,14 @@ return {
     ["table·type·name"] = "table",
   },
 
+  lexical = {
+    ["eof·token"] = "<eof>",
+    ["number·token"] = "<number>",
+    ["integer·token"] = "<integer>",
+    ["name·token"] = "<name>",
+    ["string·token"] = "<string>",
+  },
+
   repl = {
     ["primary·prompt"] = "> ",
     ["continuation·prompt"] = ">> ",

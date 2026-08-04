@@ -230,6 +230,14 @@ local locale = {
     ["table·type·name"] = "🗂️",
   },
 
+  lexical = {
+    ["eof·token"] = "<eof>",
+    ["number·token"] = "<number>",
+    ["integer·token"] = "<integer>",
+    ["name·token"] = "<name>",
+    ["string·token"] = "<string>",
+  },
+
   repl = {
     -- ✏ is a pencil at rest: inviting the first line.
     ["primary·prompt"] = "✏ ",

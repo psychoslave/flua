@@ -58,7 +58,7 @@ static void pushchar (LexState *ls, int c) {
 #define currIsNewline(ls)	(ls->current == '\n' || ls->current == '\r')
 
 
-/* ORDER RESERVED */
+/* Bootstrap lexicon used only until the first locale file is parsed. */
 static const char *const luaX_default_tokens[] = {
     "and", "break", "do", "else", "elseif",
     "end", "false", "for", "function", "global", "goto", "if",
@@ -70,6 +70,14 @@ static const char *const luaX_default_tokens[] = {
 };
 
 static const char *luaX_tokens[cast_uint(TK_STRING - FIRST_RESERVED + 1)];
+
+static const char *const lexical_keys[] = {
+    "eof·token",
+    "number·token",
+    "integer·token",
+    "name·token",
+    "string·token",
+};
 
 typedef struct LocaleOp {
   const char *bytes;
@@ -288,20 +296,35 @@ void luaX_setlocale (lua_State *L) {
     "label·delimiter",
   };
   int i;
+  int top = lua_gettop(L);
+  int has_locale = 0;
   plain_locale_mode = locale_plain_mode(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE ||
+      lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE)
+    has_locale = 1;
+  lua_settop(L, top);
+  if (!has_locale)
+    return;
   for (i = 0; i <= cast_int(TK_STRING - FIRST_RESERVED); i++)
-    luaX_tokens[i] = luaX_default_tokens[i];
+    luaX_tokens[i] = "";
   for (i = 0; i < NUM_RESERVED; i++) {
-    luaX_tokens[i] = locale_get(L, "keywords", keyword_keys[i], luaX_tokens[i]);
+    luaX_tokens[i] = locale_get(L, "keywords", keyword_keys[i], "");
   }
   for (i = 0; i <= cast_int(TK_DBCOLON - TK_IDIV); i++) {
     int idx = cast_int(TK_IDIV - FIRST_RESERVED) + i;
     luaX_tokens[idx] = locale_get(L, "operators",
-                                  operator_keys[i], luaX_tokens[idx]);
+                                  operator_keys[i], "");
   }
   luaX_tokens[cast_int(TK_EOS - FIRST_RESERVED)] =
-    locale_get(L, "repl", "incomplete·input·marker",
-               luaX_tokens[cast_int(TK_EOS - FIRST_RESERVED)]);
+    locale_get(L, "lexical", lexical_keys[0], "");
+  luaX_tokens[cast_int(TK_FLT - FIRST_RESERVED)] =
+    locale_get(L, "lexical", lexical_keys[1], "");
+  luaX_tokens[cast_int(TK_INT - FIRST_RESERVED)] =
+    locale_get(L, "lexical", lexical_keys[2], "");
+  luaX_tokens[cast_int(TK_NAME - FIRST_RESERVED)] =
+    locale_get(L, "lexical", lexical_keys[3], "");
+  luaX_tokens[cast_int(TK_STRING - FIRST_RESERVED)] =
+    locale_get(L, "lexical", lexical_keys[4], "");
   locale_ops_n = 0;
   blocked_native_ops_n = 0;
   ignored_layout_glyphs_n = 0;
@@ -334,7 +357,7 @@ void luaX_setlocale (lua_State *L) {
   add_locale_identifier_aliases(L);
   add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
-    add_locale_keyword_symbol(L, keyword_keys[i], luaX_default_tokens[i],
+    add_locale_keyword_symbol(L, keyword_keys[i], "",
                               FIRST_RESERVED + i);
 }
 
@@ -362,6 +385,8 @@ static void save (LexState *ls, int c) {
 
 void luaX_init (lua_State *L) {
   int i;
+  for (i = 0; i <= cast_int(TK_STRING - FIRST_RESERVED); i++)
+    luaX_tokens[i] = luaX_default_tokens[i];
   luaX_setlocale(L);
   TString *e = luaS_newliteral(L, LUA_ENV);  /* create env name */
   luaC_fix(L, obj2gco(e));  /* never collect this name */
