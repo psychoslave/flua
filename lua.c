@@ -608,7 +608,7 @@ static int pushline (lua_State *L, int firstline) {
 */
 static int addreturn (lua_State *L) {
   const char *line = lua_tostring(L, -1);  /* original line */
-  const char *retline = lua_pushfstring(L, "return %s;", line);
+  const char *retline = lua_pushfstring(L, "return %s", line);
   int status = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
   if (status == LUA_OK)
     lua_remove(L, -2);  /* remove modified line */
@@ -641,8 +641,25 @@ static int multiline (lua_State *L) {
   checklocal(line);
   for (;;) {  /* repeat until gets a complete statement */
     int status = luaL_loadbufferx(L, line, len, "=stdin", "t");  /* try it */
-    if (!incomplete(L, status) || !pushline(L, 0))
+    int stmt_incomplete = incomplete(L, status);
+    int expr_incomplete = 0;
+    int exprstatus = LUA_OK;
+    if (!stmt_incomplete && status != LUA_OK) {
+      const char *retline = lua_pushfstring(L, "return %s", line);
+      exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
+      expr_incomplete = incomplete(L, exprstatus);
+      lua_pop(L, 2);  /* remove expression result and generated "return" line */
+    }
+    if (!(stmt_incomplete || expr_incomplete) || !pushline(L, 0)) {
+      if (expr_incomplete && !stmt_incomplete && status != LUA_OK) {
+        lua_pop(L, 1);  /* remove statement error */
+        const char *retline = lua_pushfstring(L, "return %s;", line);
+        exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
+        lua_remove(L, -2);  /* remove generated "return" line */
+        return exprstatus;  /* report expression-side incomplete error */
+      }
       return status;  /* should not or cannot try to add continuation line */
+    }
     lua_remove(L, -2);  /* remove error message (from incomplete line) */
     lua_pushliteral(L, "\n");  /* add newline... */
     lua_insert(L, -2);  /* ...between the two lines */
