@@ -15,6 +15,7 @@
 
 #include "lua.h"
 
+#include "utf8proc/utf8proc.h"
 #include "lctype.h"
 #include "ldebug.h"
 #include "ldo.h"
@@ -816,6 +817,98 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
                                    luaZ_bufflen(ls->buff) - 2);
 }
 
+static size_t utf8seqlen (unsigned char c1) {
+  if (c1 < 0x80) return 1;
+  if ((c1 & 0xE0) == 0xC0) return 2;
+  if ((c1 & 0xF0) == 0xE0) return 3;
+  if ((c1 & 0xF8) == 0xF0) return 4;
+  return 1;
+}
+
+static utf8proc_int32_t current_utf8_codepoint (LexState *ls, size_t *nbytes) {
+  unsigned char bytes[4];
+  unsigned char c1;
+  size_t len, avail;
+  utf8proc_int32_t codepoint;
+  utf8proc_ssize_t nread;
+  if (ls->current == EOZ)
+    return -1;
+  c1 = cast_uchar(ls->current);
+  bytes[0] = c1;
+  bytes[1] = (ls->z->n > 0) ? cast_uchar(ls->z->p[0]) : 0;
+  bytes[2] = (ls->z->n > 1) ? cast_uchar(ls->z->p[1]) : 0;
+  bytes[3] = (ls->z->n > 2) ? cast_uchar(ls->z->p[2]) : 0;
+  len = utf8seqlen(c1);
+  avail = cast_sizet(1) + ls->z->n;
+  if (avail < len)
+    return -1;
+  nread = utf8proc_iterate(bytes, cast(utf8proc_ssize_t, len), &codepoint);
+  if (nread < 0)
+    return -1;
+  if (nbytes != NULL)
+    *nbytes = cast_sizet(nread);
+  return codepoint;
+}
+
+static int is_identifier_start_codepoint (utf8proc_int32_t codepoint) {
+  utf8proc_category_t cat = utf8proc_category(codepoint);
+  return (cat >= UTF8PROC_CATEGORY_LU && cat <= UTF8PROC_CATEGORY_LO);
+}
+
+static int is_identifier_cont_codepoint (utf8proc_int32_t codepoint) {
+  utf8proc_category_t cat;
+  if (codepoint == 0x00B7)  /* keep middle dot continuity for existing locale keys */
+    return 1;
+  cat = utf8proc_category(codepoint);
+  if (cat >= UTF8PROC_CATEGORY_LU && cat <= UTF8PROC_CATEGORY_LO) return 1;
+  if (cat >= UTF8PROC_CATEGORY_MN && cat <= UTF8PROC_CATEGORY_ME) return 1;
+  if (cat == UTF8PROC_CATEGORY_ND) return 1;
+  if (cat == UTF8PROC_CATEGORY_PC) return 1;
+  return 0;
+}
+
+static int isidentifierstart (LexState *ls) {
+  unsigned char c1;
+  utf8proc_int32_t codepoint;
+  if (ls->current == EOZ)
+    return 0;
+  c1 = cast_uchar(ls->current);
+  if (lislalpha(c1))
+    return 1;
+  if (c1 < 0x80)
+    return 0;
+  codepoint = current_utf8_codepoint(ls, NULL);
+  if (codepoint < 0)
+    return 0;
+  return is_identifier_start_codepoint(codepoint);
+}
+
+static int isidentifiercont (LexState *ls) {
+  unsigned char c1;
+  utf8proc_int32_t codepoint;
+  if (ls->current == EOZ)
+    return 0;
+  c1 = cast_uchar(ls->current);
+  if (lislalnum(c1))
+    return 1;
+  if (c1 < 0x80)
+    return 0;
+  codepoint = current_utf8_codepoint(ls, NULL);
+  if (codepoint < 0)
+    return 0;
+  return is_identifier_cont_codepoint(codepoint);
+}
+
+static void saveutf8seq (LexState *ls) {
+  size_t i, nbytes = 0;
+  if (current_utf8_codepoint(ls, &nbytes) < 0 || nbytes == 0) {
+    save_and_next(ls);
+    return;
+  }
+  for (i = 0; i < nbytes; i++)
+    save_and_next(ls);
+}
+
 
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
@@ -924,11 +1017,14 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         return TK_EOS;
       }
       default: {
-        if (lislalpha(ls->current)) {  /* identifier or reserved word? */
+        if (isidentifierstart(ls)) {  /* identifier or reserved word? */
           TString *ts;
           do {
-            save_and_next(ls);
-          } while (lislalnum(ls->current));
+            if (cast_uchar(ls->current) < 0x80)
+              save_and_next(ls);
+            else
+              saveutf8seq(ls);
+          } while (isidentifiercont(ls));
           /* find or create string */
           ts = luaS_newlstr(ls->L, luaZ_buffer(ls->buff),
                                    luaZ_bufflen(ls->buff));

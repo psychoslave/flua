@@ -101,6 +101,13 @@ local function main()
     return 1
   end
 
+  if not must_run(
+      "Smoke UTF-8 identifiers",
+      [[./lua -e "résumé=7; assert(résumé==7); print('unicode-ident-ok')"]],
+      20) then
+    return 1
+  end
+
   if not must_run("Smoke LUA_LOCALE=native", [[LUA_LOCALE='native' ./lua -e "print('native-locale-ok')"]], 20) then
     return 1
   end
