@@ -40,6 +40,12 @@
 #define LUA_LOCALE_VAR		"LUA_LOCALE"
 #endif
 
+#if !defined(LUA_DEFAULT_LOCALE)
+#define LUA_DEFAULT_LOCALE	"native"
+#endif
+
+#define LUA_BASE_LOCALE		"native"
+
 
 #define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
 
@@ -61,6 +67,16 @@ static const char *locale_get (lua_State *L,
     const char *s = lua_tostring(L, -1);
     if (s != NULL && s[0] != '\0')
       out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
   }
   lua_settop(L, top);
   return out;
@@ -460,40 +476,69 @@ static void locale_warning (lua_State *L, const char *locale, const char *msg) {
 }
 
 
-static int handle_lualocale (lua_State *L) {
-  const char *locale = l_getenv(LUA_LOCALE_VAR);
-  if (locale == NULL || locale[0] == '\0')
-    return LUA_OK;  /* no explicit locale requested */
-  else {
-    char chunkname[256];
-    int n = snprintf(chunkname, sizeof(chunkname), "locale/%s.lua", locale);
-    int status;
-    if (n <= 0 || n >= cast_int(sizeof(chunkname))) {
-      locale_warning(L, locale, locale_get(L, "diagnostics",
-                                           "locale·name·too·long",
-                                           "locale name is too long"));
-      return LUA_OK;
+static int load_locale_file (lua_State *L, const char *locale,
+                             const char *registry_key) {
+  char chunkname[256];
+  char parentname[256];
+  int n = snprintf(chunkname, sizeof(chunkname), "locale/%s.lua", locale);
+  int status;
+  if (n <= 0 || n >= cast_int(sizeof(chunkname))) {
+    locale_warning(L, locale, locale_get(L, "diagnostics",
+                                         "locale·name·too·long",
+                                         "locale name is too long"));
+    return LUA_ERRFILE;
+  }
+  status = luaL_loadfilex(L, chunkname, "t");
+  if (status != LUA_OK) {
+    const char *msg = lua_tostring(L, -1);
+    if (msg != NULL && strstr(msg, "cannot open") != NULL) {
+      lua_pop(L, 1);
+      n = snprintf(parentname, sizeof(parentname), "../locale/%s.lua", locale);
+      if (n > 0 && n < cast_int(sizeof(parentname)))
+        status = luaL_loadfilex(L, parentname, "t");
     }
-    status = luaL_loadfilex(L, chunkname, "t");
-    if (status == LUA_OK)
-      status = docall(L, 0, 1);  /* locale file must return one value */
-    if (status != LUA_OK) {
-      const char *msg = lua_tostring(L, -1);
-      locale_warning(L, locale, msg);
-      lua_pop(L, 1);  /* remove error message */
-      return LUA_OK;  /* keep running with native hardcoded strings */
-    }
+  }
+  if (status == LUA_OK)
+    status = docall(L, 0, 1);  /* locale file must return one value */
+  if (status == LUA_OK) {
     if (!lua_istable(L, -1)) {
       locale_warning(L, locale, locale_get(L, "diagnostics",
                                            "locale·chunk·not·table",
                                            "locale chunk did not return a table"));
-      lua_pop(L, 1);  /* remove returned value */
-      return LUA_OK;
+      lua_pop(L, 1);
+      return LUA_ERRFILE;
     }
-    lua_setfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE");
-    luaX_setlocale(L);  /* refresh locale-aware lexer surfaces */
+    lua_setfield(L, LUA_REGISTRYINDEX, registry_key);
     return LUA_OK;
   }
+  else {
+    const char *msg = lua_tostring(L, -1);
+    locale_warning(L, locale, msg);
+    lua_pop(L, 1);
+    return status;
+  }
+}
+
+
+static int handle_lualocale (lua_State *L) {
+  const char *locale = l_getenv(LUA_LOCALE_VAR);
+  int base_ok = (load_locale_file(L, LUA_BASE_LOCALE, "LUA_BASE_LOCALE_TABLE") == LUA_OK);
+  const char *active = (locale != NULL && locale[0] != '\0') ? locale : LUA_DEFAULT_LOCALE;
+  if (active != NULL && active[0] != '\0') {
+    if (strcmp(active, LUA_BASE_LOCALE) == 0 && base_ok) {
+      lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE");
+      lua_setfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE");
+    }
+    else {
+      int active_ok = (load_locale_file(L, active, "LUA_LOCALE_TABLE") == LUA_OK);
+      if (!active_ok && base_ok) {
+        lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE");
+        lua_setfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE");
+      }
+    }
+  }
+  luaX_setlocale(L);  /* refresh locale-aware lexer surfaces */
+  return LUA_OK;
 }
 
 

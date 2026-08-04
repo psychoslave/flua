@@ -34,6 +34,16 @@ static const char *locale_get (lua_State *L,
     if (s != NULL && s[0] != '\0')
       out = s;
   }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
   lua_settop(L, top);
   return out;
 }
