@@ -395,10 +395,107 @@ prepfile("(\n1 +\n2 +\n3\n)\n")
 RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
 checkprogout("6\n")
 
+-- multi-line function call expression should print returned values
+prepfile[[
+function some_func(...) return ... end
+some_func(1, 2,
+3, 4)
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\t2\t3\t4\n")
+
+-- multi-line statement should still run through statement fallback
+prepfile("a =\n1\na\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\n")
+
+-- nested multiline call expression should still print returned values
+prepfile[[
+function g(a, b) return a + b end
+function f(x, y) return x, y end
+f(g(1,
+2),
+3)
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("3\t3\n")
+
+-- multiline method-call expression should print returned values
+prepfile[[
+t = {tag = "ok", foo = function (self, a, b) return a, b, self.tag end}
+t:foo(
+1, 2)
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\t2\tok\n")
+
+-- multiline table-constructor expression should print evaluated result
+prepfile[[
+({
+  a = 1,
+  b = 2,
+}).a
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\n")
+
+-- parenthesized multiline prefix expression should print call result
+prepfile[[
+(
+  function () return 1 end
+)()
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\n")
+
+-- multiline local declaration should still compile via statement path
+prepfile[[
+do
+  local x =
+    1
+  print(x)
+end
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("1\n")
+
+-- multiline assignment still favors statement fallback when needed
+prepfile[[
+a = 40 +
+  2
+a
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("42\n")
+
+-- comments in continued call should not break multiline expression handling
+prepfile[[
+function h(a, b) return a + b end
+h(1,  -- keep parsing through continuation
+2)
+]]
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s]], prog, out)
+checkprogout("3\n")
+
 -- genuinely invalid multi-line input should still error
 prepfile("(\n1 +\n)\n")
 RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s 2>&1]], prog, out)
 assert(string.find(getoutput(), "near"))
+
+-- unfinished long construct should still report eof marker
+prepfile("[[\nabc\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s 2>&1]], prog, out)
+assert(string.find(getoutput(), "near <eof>", 1, true))
+
+-- unfinished call should still report eof marker
+prepfile("f(\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s 2>&1]], prog, out)
+assert(string.find(getoutput(), "near <eof>", 1, true))
+
+-- if both expression and statement forms fail, keep pointing at offending token
+prepfile("(\n1 +\n$\n)\n")
+RUN([[lua -e"_PROMPT='' _PROMPT2=''" -i < %s > %s 2>&1]], prog, out)
+assert(string.find(getoutput(), "near '$'", 1, true))
 
 -- input interrupted in continuation line
 prepfile("a.\n")
