@@ -11,6 +11,19 @@ local function expect_ok(src)
   assert(f ~= nil, err)
 end
 
+local function expect_print(src, expected)
+  local out = {}
+  local env = {
+    print = function(...)
+      out[#out + 1] = table.concat({...}, "\t")
+    end,
+  }
+  local f, err = load(src, "=(symbolic-sep)", "t", env)
+  assert(f ~= nil, err)
+  f()
+  assert(#out == 1 and out[1] == expected)
+end
+
 local locale = require("locale.symbolic·transpraxis")
 local delimiters = assert(locale.delimiters)
 
@@ -42,6 +55,7 @@ expect_fail("local t = {☙2,3}")
 expect_ok("local a = 1❦ local b = 2")
 expect_ok("❦print(1)❦print(2)❦")
 expect_ok("print(1)❦")
+expect_print("❦print(＇works＇)❦", "works")
 expect_ok("local s = ＂x＂")
 expect_ok("local s = ＇x＇")
 

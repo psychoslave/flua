@@ -23,7 +23,7 @@ Extended metaphors:
     🎚 aliases mode in tests: slider semantics match a selected run mode.
     🏭 denotes factory mode: default state as a device leaving factory settings.
     🛄 aliases arg in tests: argument table as luggage brought into runtime.
-    🧩 aliases type: puzzle-piece shape matches classification/fit of values.
+    🗃️ aliases type: card-file-box metaphor fits classification/organized data.
     🗂️ labels table type: indexed tabs evoke categorized key/value entries.
     ⚙️ aliases os: operating-system toolbox namespace.
     ⏼ aliases exit on os: universal power symbol for shutdown/termination.
@@ -246,7 +246,7 @@ local locale = {
     -- 🌕 provides a moon glyph identity for Lua.
     ["interpreter·identity"] = "🌕",
     -- usage symbolism notes:
-    -- 🤹 usage, ▶️ run/execute, 🔗 string/chunk, 🧱 module, 🗣 statement, 📜 script.
+    -- 🤹 usage, ▶️ run/execute, 🔗 string/chunk, 🧩 module, 🗣 statement, 📜 script.
     -- ➡️ then (that is "after which", in temporal fashion, in contrast with logical conditional apodosis ∴,
     -- 🕹 interactive mode, 📽 show, 🌟 enlightening information.
     -- 🙈 hide, 💎 pure/plain, 🛟 fallback safety-net, 🔘 enable, ⚠️ warnings.
@@ -256,8 +256,8 @@ local locale = {
       "🎛️:\n" ..
       "  -e 🗣      ▶️🔗'🗣'\n" ..
       "  -i        ▶️📜➡️🕹\n" ..
-      "  -l mod    💉🧱'mod' ↦ 🌐'mod'\n" ..
-      "  -l g=mod  💉🧱'mod' ↦ 🌐'g'\n" ..
+      "  -l 🧩     💉🧩'🧩' ↦ 🌐'🧩'\n" ..
+      "  -l g=🧩   💉🧩'🧩' ↦ 🌐'🌐'\n" ..
       "  -v        📽🌟\n" ..
       "  -E        🙈🧭\n" ..
       "  -P        💎 (¬🛟)\n" ..
@@ -309,48 +309,20 @@ local locale = {
   },
 
   aliases = {
-    -- 🎯 is expected to hit target truth; it aliases assert().
-    ["assertion·guard"] = "🎯",
-    -- 🎚 selects/holds run mode in tests without changing language keywords.
-    ["mode·identifier"] = "🎚",
-    -- 🛄 carries invocation arguments into the running chunk.
-    ["argument·table·identifier"] = "🛄",
-    -- 🧩 marks value classification as a "fit into a type shape".
-    ["type·inspector"] = "🧩",
+    -- Runtime-consumed alias keys (used by i18n C wiring):
     -- ⚙️ maps the OS library to a toolbox-like system namespace symbol.
     ["os·library·identifier"] = "⚙️",
     -- ⏼ maps os.exit to the universal power/stop semantic.
     ["os·exit·method"] = "⏼",
-    ["raw·getter"] = "⟼",
-    ["raw·setter"] = "⟻",
-    ["metatable·getter"] = "⇸",
-    ["metatable·setter"] = "⇷",
-    ["debug·uservalue·getter"] = "↣",
-    ["debug·uservalue·setter"] = "↢",
-    ["debug·hook·getter"] = "↪",
-    ["debug·hook·setter"] = "↩",
-    ["debug·local·getter"] = "⇢",
-    ["debug·local·setter"] = "⇠",
-    ["debug·upvalue·getter"] = "↠",
-    ["debug·upvalue·setter"] = "↞",
-    ["debug·registry·getter"] = "⇾",
-    ["debug·info·getter"] = "⇨",
-    ["os·env·getter"] = "↗",
-    ["os·locale·setter"] = "↙",
-    ["io·buffer·setter"] = "↧",
-    ["metatable·probe·identifier"] = "📦",
-    ["quit·probe·identifier"] = "🚚",
-    ["quit·error·identifier"] = "🎁",
-    ["probe·function·identifier"] = "🪤",
-    ["first·value·identifier"] = "🗃️",
-    ["second·value·identifier"] = "🧰",
+    -- Suggestions only (not runtime-consumed alias keys): 🎯 🎚 🛄 🧩 🗃️
+    -- and helper-family symbols (⟼ ⟻ ⇸ ⇷ ↣ ↢ ↪ ↩ ⇢ ⇠ ↠ ↞ ⇾ ⇨ ↗ ↙ ↧).
   },
 
   ["identifier·aliases"] = {
     ["🎯"] = "assert",
-    ["🎚"] = "mode",
-    ["🛄"] = "arg",
-    ["🧩"] = "type",
+    ["🎚"] = "arg",
+    ["🛄"] = "mode",
+    ["🗃️"] = "type",
     ["⚙️"] = "os",
     ["⏼"] = "exit",
     ["⟼"] = "rawget",
@@ -367,20 +339,29 @@ local locale = {
     ["↞"] = "setupvalue",
     ["⇾"] = "getregistry",
     ["⇨"] = "getinfo",
+    ["🪤"] = "load",
+    ["💥"] = "error",
+    ["🖨"] = "print",
+    ["📚"] = "ipairs",
+    ["🎛"] = "select",
+    ["🚚"] = "v1",
+    ["🛻"] = "v2",
+    ["⛟"] = "v3",
+    ["🚛"] = "v4",
+    ["🚒"] = "v5",
+    ["🐞"] = "debug",
+    ["🔤"] = "string",
+    ["🔎"] = "find",
     ["↗"] = "getenv",
     ["↙"] = "setlocale",
     ["↧"] = "setvbuf",
-    ["📦"] = "mtprobe",
-    ["🚚"] = "quitprobe",
-    ["🎁"] = "quiterr",
-    ["🪤"] = "f",
-    ["🗃️"] = "a",
-    ["🧰"] = "b",
     ["🌐"] = "_G",
   },
 
   layout = {
     -- Decorative branch-tree connectors accepted as ignorable layout glyphs.
+    -- That’s what allow to make conditional statement with multiline intermediary statement bodies still look like a
+    -- connected tree visually similar to Frege’s Begriffsschrift⁶.
     ["ignored·glyphs"] = { "│", "┴" },
   },
 }
@@ -393,3 +374,4 @@ return locale
 -- ³ https://en.wikipedia.org/wiki/Media_controls
 -- ⁴ https://en.wikipedia.org/wiki/Begriffsschrift
 -- ⁵ https://en.wikipedia.org/wiki/Bullet_(typography)#In_Unicode
+-- ⁶ https://en.wikipedia.org/wiki/Begriffsschrift

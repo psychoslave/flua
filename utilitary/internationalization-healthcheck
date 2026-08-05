@@ -142,7 +142,7 @@ local function main()
 
   if not must_run(
       "Test symbolic locale plain mode (-P)",
-      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P testes/symbolic-locale.lua plain]],
+      [[LUA_LOCALE='symbolic·transpraxis' ./lua -P testes/symbolic-locale.lua 💎]],
       20) then
     return 1
   end
