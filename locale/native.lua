@@ -104,6 +104,7 @@ return {
       "  -W        turn warnings on\n" ..
       "  --        stop handling options\n" ..
       "  -         stop handling options and execute stdin\n",
+    ["version·banner"] = "Lua 5.5.1  Copyright (C) 1994-2026 Lua.org, PUC-Rio",
     ["incomplete·input·marker"] = "<eof>",
     ["interactive·source·identity"] = "=stdin",
     ["commandline·source·identity"] = "=(command line)",

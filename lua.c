@@ -218,8 +218,9 @@ static int docall (lua_State *L, int narg, int nres) {
 }
 
 
-static void print_version (void) {
-  lua_writestring(LUA_COPYRIGHT, strlen(LUA_COPYRIGHT));
+static void print_version (lua_State *L) {
+  const char *banner = locale_get(L, "repl", "version·banner", LUA_COPYRIGHT);
+  lua_writestring(banner, strlen(banner));
   lua_writeline();
 }
 
@@ -919,7 +920,7 @@ static int pmain (lua_State *L) {
     return 0;
   }
   if (args & has_v)  /* option '-v'? */
-    print_version();
+    print_version(L);
   if (args & has_E) {  /* option '-E'? */
     l_getenv = &no_getenv;  /* program will ignore environment variables */
     lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
@@ -947,7 +948,7 @@ static int pmain (lua_State *L) {
     doREPL(L);  /* do read-eval-print loop */
   else if (script < 1 && !(args & (has_e | has_v))) { /* no active option? */
     if (lua_stdin_is_tty()) {  /* running in interactive mode? */
-      print_version();
+      print_version(L);
       doREPL(L);  /* do read-eval-print loop */
     }
     else dofile(L, NULL);  /* executes stdin as a file */
