@@ -74,7 +74,7 @@ flavor; readers are still free to treat it as abstract nonsense and enjoy
 the glyph storm.¹
 --]]
 
-local locale = {
+locale = {
   keywords = {
     -- ∧ is the standard logical conjunction symbol.
     ["conjunction·operator"] = "∧",
@@ -368,7 +368,7 @@ local locale = {
   },
 }
 
-return locale
+
 
 -- # References
 -- ¹ https://en.wikipedia.org/wiki/Abstract_nonsense

@@ -1,0 +1,50 @@
+INSTALL (Darwin ARM64 / Apple Silicon)
+=======================================
+
+This repository is currently developed with macOS ARM64 and Homebrew Readline.
+
+1) Build
+--------
+
+From repository root:
+
+make clean
+make MYCFLAGS='-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB="\"/opt/homebrew/opt/readline/lib/libreadline.dylib\""' MYLDFLAGS="" MYLIBS="" CC=cc
+
+
+2) Build with a selected default kernel locale
+-----------------------------------------------
+
+Use the locale-aware target:
+
+make locale-build LUA_KERNEL_LOCALE='<locale-name>' MYCFLAGS='-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB="\"/opt/homebrew/opt/readline/lib/libreadline.dylib\""' MYLDFLAGS="" MYLIBS="" CC=cc
+
+`<locale-name>` corresponds to `locale/<locale-name>.lua`.
+
+Examples:
+- `LUA_KERNEL_LOCALE=native`
+- `LUA_KERNEL_LOCALE=symbolic·transpraxis`
+
+3) Test suite
+-------------
+
+cd testes
+env -i PATH="$PATH" HOME="$HOME" TERM="$TERM" ../lua main.lua
+
+Expected: output ends with `OK`.
+
+
+4) Internationalization healthcheck
+-----------------------------------
+
+From repository root:
+
+./lua utilitary/internationalization-healthcheck
+
+
+5) Native locale loading smoke test
+-----------------------------------
+
+LUA_LOCALE=native ./lua
+
+Expected: no "failed to load locale" warning.

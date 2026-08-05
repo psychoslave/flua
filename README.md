@@ -1,7 +1,70 @@
-# Lua
+# Lua i18n fork
 
-This is the repository of Lua development code, as seen by the Lua team. It contains the full history of all commits but is mirrored irregularly. For complete information about Lua, visit [Lua.org](https://www.lua.org/).
+This repository is a **defluent Lua variant focused on internationalization**: locale-driven keywords/operators/diagnostics, symbolic-locale stress support, and kernel-locale bootstrap/generation paths integrated in the build.
 
-Please **do not** send pull requests. To report issues, post a message to the [Lua mailing list](https://www.lua.org/lua-l.html).
+For the official Lua project, language reference, releases, and upstream communication, use [Lua.org](https://www.lua.org/), the [download page](https://www.lua.org/download.html), and the [Lua mailing list](https://www.lua.org/lua-l.html).
 
-Download official Lua releases from [Lua.org](https://www.lua.org/download.html).
+In short: this repo tracks Lua core evolution while intentionally diverging to explore and validate end-to-end interpreter localization.
+
+## Build
+
+A **kernel locale** is the compile-time default locale baked into the interpreter for bootstrap-facing tokens/labels and initial locale loading behavior. It is selected with `LUA_KERNEL_LOCALE` during build.
+
+List currently supported locale names:
+
+```sh
+ls locale/*.lua | sed 's#^locale/##; s#\\.lua$##'
+```
+
+### Linux
+
+```sh
+make clean
+make MYCFLAGS='-std=c99 -DLUA_USE_LINUX' MYLDFLAGS='-Wl,-E' MYLIBS='-ldl' CC=gcc
+```
+
+Build with a different default kernel locale:
+
+```sh
+make locale-build LUA_KERNEL_LOCALE='<locale-name>' \
+  MYCFLAGS='-std=c99 -DLUA_USE_LINUX' \
+  MYLDFLAGS='-Wl,-E' MYLIBS='-ldl' CC=gcc
+```
+
+### Windows (MSYS2/MinGW shell)
+
+```sh
+make clean
+make MYCFLAGS='-std=c99 -DLUA_USE_WINDOWS' MYLDFLAGS='' MYLIBS='' CC=gcc
+```
+
+Build with a different default kernel locale:
+
+```sh
+make locale-build LUA_KERNEL_LOCALE='<locale-name>' \
+  MYCFLAGS='-std=c99 -DLUA_USE_WINDOWS' \
+  MYLDFLAGS='' MYLIBS='' CC=gcc
+```
+
+### macOS X (Darwin ARM64, Homebrew Readline)
+
+```sh
+make clean
+make MYCFLAGS='-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB="\"/opt/homebrew/opt/readline/lib/libreadline.dylib\""' MYLDFLAGS="" MYLIBS="" CC=cc
+```
+
+Build with a different default kernel locale:
+
+```sh
+make locale-build LUA_KERNEL_LOCALE='<locale-name>' \
+  MYCFLAGS='-std=c99 -DLUA_USE_POSIX -DLUA_USE_DLOPEN -DLUA_READLINELIB="\"/opt/homebrew/opt/readline/lib/libreadline.dylib\""' \
+  MYLDFLAGS="" MYLIBS="" CC=cc
+```
+
+For all platforms, `<locale-name>` maps to `locale/<locale-name>.lua`. Use `LUA_KERNEL_LOCALE=native` to return to the native default.
+
+Quick end-to-end validation (from repository root):
+
+```sh
+./lua utilitary/internationalization-healthcheck
+```

@@ -44,7 +44,9 @@
 #define LUA_DEFAULT_LOCALE	"native"
 #endif
 
+#if !defined(LUA_BASE_LOCALE)
 #define LUA_BASE_LOCALE		"native"
+#endif
 
 
 #define LUA_INITVARVERSION	LUA_INIT_VAR LUA_VERSUFFIX
@@ -500,8 +502,16 @@ static int load_locale_file (lua_State *L, const char *locale,
     }
   }
   if (status == LUA_OK)
-    status = docall(L, 0, 1);  /* locale file must return one value */
+    status = docall(L, 0, 1);  /* locale file should return one value */
   if (status == LUA_OK) {
+    if (lua_isnil(L, -1)) {
+      lua_pop(L, 1);
+      lua_getglobal(L, "locale");
+      if (lua_istable(L, -1)) {
+        lua_pushnil(L);
+        lua_setglobal(L, "locale");
+      }
+    }
     if (!lua_istable(L, -1)) {
       locale_warning(L, locale, locale_get(L, "diagnostics",
                                            "locale·chunk·not·table",

@@ -24,7 +24,23 @@ local function expect_print(src, expected)
   assert(#out == 1 and out[1] == expected)
 end
 
-local locale = require("locale.symbolic·transpraxis")
+local function load_symbolic_locale()
+  local chunk = dofile("locale/symbolic·transpraxis.lua")
+  if chunk == nil then
+    chunk = _G.locale
+    _G.locale = nil
+  end
+  if chunk == nil then
+    chunk = dofile("../locale/symbolic·transpraxis.lua")
+    if chunk == nil then
+      chunk = _G.locale
+      _G.locale = nil
+    end
+  end
+  return chunk
+end
+
+local locale = assert(load_symbolic_locale())
 local delimiters = assert(locale.delimiters)
 
 local expected = {
