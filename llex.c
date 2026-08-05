@@ -93,6 +93,10 @@ static int blocked_native_ops_n = 0;
 static LocaleOp ignored_layout_glyphs[32];
 static int ignored_layout_glyphs_n = 0;
 static int plain_locale_mode = 0;
+static const char *locale_string_delim = "\"";
+static size_t locale_string_delim_len = 1;
+static const char *locale_string_delim_alt = "'";
+static size_t locale_string_delim_alt_len = 1;
 
 
 static const char *locale_get (lua_State *L,
@@ -160,6 +164,19 @@ static void add_locale_op (lua_State *L, const char *key,
     locale_ops_n++;
     if (plain_locale_mode)
       add_blocked_native_op(fallback);
+  }
+}
+
+static void add_locale_op_noblock (lua_State *L, const char *key,
+                                   const char *fallback, int token) {
+  const char *s = locale_get(L, "delimiters", key, fallback);
+  if (s[0] != '\0' && strcmp(s, fallback) != 0) {
+    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
+    locale_ops[locale_ops_n].bytes = s;
+    locale_ops[locale_ops_n].len = strlen(s);
+    locale_ops[locale_ops_n].token = token;
+    locale_ops[locale_ops_n].name = NULL;
+    locale_ops_n++;
   }
 }
 
@@ -354,6 +371,23 @@ void luaX_setlocale (lua_State *L) {
   add_locale_op(L, "bitwise·negation", "~", '~');
   add_locale_op(L, "field·access·operator", ".", '.');
   add_locale_op(L, "method·invocation·operator", ":", ':');
+  add_locale_op_noblock(L, "expression·grouping·opening", "(", '(');
+  add_locale_op_noblock(L, "expression·grouping·closing", ")", ')');
+  add_locale_op_noblock(L, "index·opening", "[", '[');
+  add_locale_op_noblock(L, "index·closing", "]", ']');
+  add_locale_op_noblock(L, "constructor·opening", "{", '{');
+  add_locale_op_noblock(L, "constructor·closing", "}", '}');
+  add_locale_op_noblock(L, "element·separator", ",", ',');
+  add_locale_op_noblock(L, "statement·separator", ";", ';');
+  locale_string_delim = locale_get(L, "delimiters", "string·delimiter", "\"");
+  if (locale_string_delim[0] == '\0')
+    locale_string_delim = "\"";
+  locale_string_delim_len = strlen(locale_string_delim);
+  locale_string_delim_alt =
+    locale_get(L, "delimiters", "string·delimiter·alternate", "'");
+  if (locale_string_delim_alt[0] == '\0')
+    locale_string_delim_alt = "'";
+  locale_string_delim_alt_len = strlen(locale_string_delim_alt);
   add_locale_identifier_aliases(L);
   add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
@@ -538,6 +572,17 @@ static int check_next1 (LexState *ls, int c) {
     return 1;
   }
   else return 0;
+}
+
+static int current_matches_bytes (LexState *ls, const char *bytes, size_t len) {
+  if (len == 0 || ls->current == EOZ)
+    return 0;
+  if (cast_uchar(bytes[0]) != ls->current)
+    return 0;
+  if (len == 1)
+    return 1;
+  return (ls->z->n >= len - 1 &&
+          memcmp(ls->z->p, bytes + 1, len - 1) == 0);
 }
 
 /*
@@ -917,6 +962,83 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
                                    luaZ_bufflen(ls->buff) - 2);
 }
 
+static void read_string_utf8 (LexState *ls, const char *delim, size_t dlen,
+                              SemInfo *seminfo) {
+  size_t i;
+  for (i = 0; i < dlen; i++)
+    save_and_next(ls);  /* keep delimiter (for error messages) */
+  while (!current_matches_bytes(ls, delim, dlen)) {
+    switch (ls->current) {
+      case EOZ:
+        lexerror(ls, locale_get(ls->L, "diagnostics",
+                                       "unfinished·string",
+                                       "unfinished string"), TK_EOS);
+        break;  /* to avoid warnings */
+      case '\n':
+      case '\r':
+        lexerror(ls, locale_get(ls->L, "diagnostics",
+                                       "unfinished·string",
+                                       "unfinished string"), TK_STRING);
+        break;  /* to avoid warnings */
+      case '\\': {  /* escape sequences */
+        int c;  /* final character to be saved */
+        save_and_next(ls);  /* keep '\\' for error messages */
+        switch (ls->current) {
+          case 'a': c = '\a'; goto read_save;
+          case 'b': c = '\b'; goto read_save;
+          case 'f': c = '\f'; goto read_save;
+          case 'n': c = '\n'; goto read_save;
+          case 'r': c = '\r'; goto read_save;
+          case 't': c = '\t'; goto read_save;
+          case 'v': c = '\v'; goto read_save;
+          case 'x': c = readhexaesc(ls); goto read_save;
+          case 'u': utf8esc(ls);  goto no_save;
+          case '\n': case '\r':
+            inclinenumber(ls); c = '\n'; goto only_save;
+          case '\\': case '\"': case '\'':
+            c = ls->current; goto read_save;
+          case EOZ: goto no_save;  /* will raise an error next loop */
+          case 'z': {  /* zap following span of spaces */
+            luaZ_buffremove(ls->buff, 1);  /* remove '\\' */
+            next(ls);  /* skip the 'z' */
+            while (lisspace(ls->current)) {
+              if (currIsNewline(ls)) inclinenumber(ls);
+              else next(ls);
+            }
+            goto no_save;
+          }
+          default: {
+            if (cast_uchar(ls->current) >= 0x80) {
+              c = ls->current;
+              goto read_save;
+            }
+            esccheck(ls, lisdigit(ls->current),
+                        locale_get(ls->L, "diagnostics",
+                                   "invalid·escape·sequence",
+                                   "invalid escape sequence"));
+            c = readdecesc(ls);
+            goto only_save;
+          }
+        }
+       read_save:
+         next(ls);
+         /* go through */
+       only_save:
+         luaZ_buffremove(ls->buff, 1);
+         save(ls, c);
+         /* go through */
+       no_save: break;
+      }
+      default:
+        save_and_next(ls);
+    }
+  }
+  for (i = 0; i < dlen; i++)
+    save_and_next(ls);  /* skip delimiter */
+  seminfo->ts = luaX_newstring(ls, luaZ_buffer(ls->buff) + dlen,
+                                   luaZ_bufflen(ls->buff) - 2 * dlen);
+}
+
 static size_t utf8seqlen (unsigned char c1) {
   if (c1 < 0x80) return 1;
   if ((c1 & 0xE0) == 0xC0) return 2;
@@ -1022,6 +1144,18 @@ static int llex (LexState *ls, SemInfo *seminfo) {
       lexerror(ls, locale_get(ls->L, "diagnostics",
                               "unexpected·symbol", "unexpected symbol"),
                ls->current);
+    if (current_matches_bytes(ls, locale_string_delim, locale_string_delim_len) &&
+        !(locale_string_delim_len == 1 &&
+          (locale_string_delim[0] == '"' || locale_string_delim[0] == '\''))) {
+      read_string_utf8(ls, locale_string_delim, locale_string_delim_len, seminfo);
+      return TK_STRING;
+    }
+    if (current_matches_bytes(ls, locale_string_delim_alt, locale_string_delim_alt_len) &&
+        !(locale_string_delim_alt_len == 1 &&
+          (locale_string_delim_alt[0] == '"' || locale_string_delim_alt[0] == '\''))) {
+      read_string_utf8(ls, locale_string_delim_alt, locale_string_delim_alt_len, seminfo);
+      return TK_STRING;
+    }
     int lop = try_locale_operator(ls, seminfo);
     if (lop != 0)
       return lop;
