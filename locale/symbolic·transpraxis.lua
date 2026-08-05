@@ -297,6 +297,8 @@ local locale = {
     ["generic·syntax·error"] = "⚠ ⚫(🖌📤🎨) ∧ 🖼️ ⊬ ⟨…=…⟩",
     -- Keep unexpected-symbol diagnostics explicit with non-letter symbolism.
     ["unexpected·symbol"] = "⚠ (💬⛔💭) ∧ 🖼️ ⊬ ⟨…⇔…⟩",
+    -- ☯ here as "we expect harmony in complementary construction" that yin/yang symbolize perfectly.
+    ["lua·function·expected"] = "🌕□☯",
   },
 
   internals = {

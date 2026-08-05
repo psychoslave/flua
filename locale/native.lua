@@ -149,6 +149,7 @@ return {
       "warning: locals do not survive across lines in interactive mode",
     ["name·or·variadic·expansion·expected"] = "<name> or '...' expected",
     ["function·arguments·expected"] = "function arguments expected",
+    ["lua·function·expected"] = "Lua function expected",
     ["assignment·or·iteration·domain·expected"] = "'=' or 'in' expected",
     ["control·structure·too·long"] = "control structure too long",
     ["unknown·attribute"] = "unknown attribute '%s'",
