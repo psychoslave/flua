@@ -247,7 +247,8 @@ local locale = {
     ["interpreter·identity"] = "🌕",
     -- usage symbolism notes:
     -- 🤹 usage, ▶️ run/execute, 🔗 string/chunk, 🧱 module, 🗣 statement, 📜 script.
-    -- ➡️ then, 🕹 interactive mode, 📽 show, 🌟 enlightening information.
+    -- ➡️ then (that is "after which", in temporal fashion, in contrast with logical conditional apodosis ∴,
+    -- 🕹 interactive mode, 📽 show, 🌟 enlightening information.
     -- 🙈 hide, 💎 pure/plain, 🛟 fallback safety-net, 🔘 enable, ⚠️ warnings.
     -- 🛑 stop, 🎛️ options, 💉 inject/require/import, ↦ map into global binding.
     ["usage·description"] =
@@ -267,8 +268,9 @@ local locale = {
     -- - lua.org observed A-record history (non-exhaustive):
     --   87.237.62.180, 148.251.24.173, 88.99.213.221, 46.175.8.47
     --   Source: https://robtex.com/en/dns-lookup/org/lua
-    -- - lua.org current A record: 46.175.8.47
-    --   Source: dig +short lua.org A
+    -- - 🖧 (THREE NETWORKED COMPUTERS, U+1F5A7) is expected to be among the
+    --   least well-supported glyphs in this locale set, but it is retained as
+    --   the strongest semantic match for network/IP provenance.
     -- - PUC-Rio fiscal identity code (CNPJ): 33.555.921.0001/70
     --   Source: http://anabranco.usuarios.rdc.puc-rio.br/portugues/arquivos/planoDeTrabalhoSME.html
     ["version·banner"] =
