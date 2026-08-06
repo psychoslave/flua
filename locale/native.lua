@@ -210,11 +210,20 @@ return {
     ["light·userdata·type·name"] = "light userdata",
     ["type·expected·got"] = "%s expected, got %s",
     ["invalid·option"] = "invalid option '%s'",
+    ["invalid·option·start"] = "invalid option '>'",
+    ["invalid·option·generic"] = "invalid option",
     ["stack·overflow·with·context"] = "stack overflow (%s)",
     ["stack·overflow"] = "stack overflow",
+    ["not·enough·stack"] = "not enough stack",
+    ["too·many·upvalues"] = "too many upvalues",
     ["value·expected"] = "value expected",
     ["not·enough·memory"] = "not enough memory",
+    -- %s is the numeric value whose integer form could not be preserved.
+    ["number·has·no·integer·representation"] = "number%s has no integer representation",
+    ["value·has·no·literal·form"] = "value has no literal form",
+    ["no·value"] = "no value",
     ["resulting·string·too·large"] = "resulting string too large",
+    ["value·out·of·range"] = "value out of range",
     ["object·length·not·integer"] = "object length is not an integer",
     ["metamethod·tostring·must·return·string"] = "'__tostring' must return a string",
     ["core·library·numeric·types·incompatible"] =
@@ -251,6 +260,18 @@ return {
     ["invalid·order·function·for·sorting"] = "invalid order function for sorting",
     ["wrong·number·of·arguments"] = "wrong number of arguments",
     ["string·slice·too·long"] = "string slice too long",
+    ["too·many·results"] = "too many results",
+    ["initial·position·out·of·string"] = "initial position out of string",
+    ["data·string·too·short"] = "data string too short",
+    ["unfinished·string·for·format·z"] = "unfinished string for format 'z'",
+    ["invalid·upvalue·index"] = "invalid upvalue index",
+    ["result·too·long"] = "result too long",
+    ["unsigned·overflow"] = "unsigned overflow",
+    ["string·longer·than·given·size"] = "string longer than given size",
+    ["string·length·does·not·fit·in·given·size"] = "string length does not fit in given size",
+    ["string·contains·zeros"] = "string contains zeros",
+    ["variable·length·format"] = "variable-length format",
+    ["format·result·too·large"] = "format result too large",
     ["initial·position·continuation·byte"] =
       "initial position is a continuation byte",
     ["attempt·op·string·with·string"] = "attempt to %s a '%s' with a '%s'",
@@ -291,9 +312,13 @@ return {
     ["missing·size·for·format·option·c"] = "missing size for format option 'c'",
     -- %c is the invalid format option character.
     ["invalid·format·option"] = "invalid format option '%c'",
+    ["invalid·next·option·for·option·X"] = "invalid next option for option 'X'",
+    ["format·asks·for·alignment·not·power·of·2"] = "format asks for alignment not power of 2",
     -- %d is the byte count of the integer representation.
     ["byte·integer·does·not·fit·lua·integer"] =
       "%d-byte integer does not fit into Lua Integer",
+    -- %d and %d are the declared and supported integral sizes.
+    ["integral·size·out·of·limits"] = "integral size (%d) out of limits [1,%d]",
     -- varinfo fragment appended to some VM/debug errors:
     -- " (%s '%s')" => e.g. " (local 'x')" / " (upvalue 'k')".
     ["varinfo·kind·name"] = " (%s '%s')",
@@ -354,6 +379,12 @@ return {
     ["failed·to·load·locale·warning"] = "warning: failed to load locale '%s'",
     ["locale·name·too·long"] = "locale name is too long",
     ["locale·chunk·not·table"] = "locale chunk did not return a table",
+    ["invalid·conversion·specifier·for·strftime"] = "invalid conversion specifier '%%%s'",
+    ["time·result·cannot·be·represented·in·this·installation"] =
+      "time result cannot be represented in this installation",
+    ["date·result·cannot·be·represented·in·this·installation"] =
+      "date result cannot be represented in this installation",
+    ["time·out·of·bounds"] = "time out-of-bounds",
   },
 
   -- Core runtime internal identifiers:

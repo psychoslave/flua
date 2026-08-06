@@ -62,7 +62,8 @@ static const char *locale_get (lua_State *L,
 */
 static void checkstack (lua_State *L, lua_State *L1, int n) {
   if (l_unlikely(L != L1 && !lua_checkstack(L1, n)))
-    luaL_error(L, "stack overflow");
+    luaL_error(L, "%s",
+      locale_get(L, "diagnostics", "stack·overflow", "stack overflow"));
 }
 
 
@@ -180,7 +181,9 @@ static int db_getinfo (lua_State *L) {
   lua_State *L1 = getthread(L, &arg);
   const char *options = luaL_optstring(L, arg+2, "flnSrtu");
   checkstack(L, L1, 3);
-  luaL_argcheck(L, options[0] != '>', arg + 2, "invalid option '>'");
+  luaL_argcheck(L, options[0] != '>', arg + 2,
+                locale_get(L, "diagnostics", "invalid·option·start",
+                           "invalid option '>'"));
   if (lua_isfunction(L, arg + 1)) {  /* info about a function? */
     options = lua_pushfstring(L, ">%s", options);  /* add '>' to 'options' */
     lua_pushvalue(L, arg + 1);  /* move function to 'L1' stack */
@@ -193,7 +196,8 @@ static int db_getinfo (lua_State *L) {
     }
   }
   if (!lua_getinfo(L1, options, &ar))
-    return luaL_argerror(L, arg+2, "invalid option");
+    return luaL_argerror(L, arg+2,
+      locale_get(L, "diagnostics", "invalid·option·generic", "invalid option"));
   lua_newtable(L);  /* table to collect results */
   if (strchr(options, 'S')) {
     lua_pushlstring(L, ar.source, ar.srclen);
@@ -244,7 +248,8 @@ static int db_getlocal (lua_State *L) {
     const char *name;
     int level = (int)luaL_checkinteger(L, arg + 1);
     if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
-      return luaL_argerror(L, arg+1, "level out of range");
+      return luaL_argerror(L, arg+1,
+        locale_get(L, "diagnostics", "level·out·of·range", "level out of range"));
     checkstack(L, L1, 1);
     name = lua_getlocal(L1, &ar, nvar);
     if (name) {
@@ -269,7 +274,8 @@ static int db_setlocal (lua_State *L) {
   int level = (int)luaL_checkinteger(L, arg + 1);
   int nvar = (int)luaL_checkinteger(L, arg + 2);
   if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
-    return luaL_argerror(L, arg+1, "level out of range");
+    return luaL_argerror(L, arg+1,
+      locale_get(L, "diagnostics", "level·out·of·range", "level out of range"));
   luaL_checkany(L, arg+3);
   lua_settop(L, arg+3);
   checkstack(L, L1, 1);
@@ -318,7 +324,8 @@ static void *checkupval (lua_State *L, int argf, int argnup, int *pnup) {
   luaL_checktype(L, argf, LUA_TFUNCTION);  /* closure */
   id = lua_upvalueid(L, argf, nup);
   if (pnup) {
-    luaL_argcheck(L, id != NULL, argnup, "invalid upvalue index");
+    luaL_argcheck(L, id != NULL, argnup,
+      locale_get(L, "diagnostics", "invalid·upvalue·index", "invalid upvalue index"));
     *pnup = nup;
   }
   return id;

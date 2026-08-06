@@ -108,7 +108,8 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   size_t glen = strlen(gname);
   lua_getinfo(L, "f", ar);  /* push function */
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
-  luaL_checkstack(L, 6, "not enough stack");  /* slots for 'findfield' */
+  luaL_checkstack(L, 6,
+    locale_get(L, "diagnostics", "not·enough·stack", "not enough stack"));  /* slots for 'findfield' */
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
     if (strncmp(name, gname, glen) == 0 && name[glen] == '.') {
@@ -596,7 +597,9 @@ LUALIB_API lua_Number luaL_optnumber (lua_State *L, int arg, lua_Number def) {
 
 static void interror (lua_State *L, int arg) {
   if (lua_isnumber(L, arg))
-    luaL_argerror(L, arg, "number has no integer representation");
+    luaL_argerror(L, arg,
+      locale_get(L, "diagnostics", "number·has·no·integer·representation",
+                 "number has no integer representation"));
   else
     tag_error(L, arg, LUA_TNUMBER);
 }
@@ -1141,7 +1144,8 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
 ** Returns with only the table at the stack.
 */
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup, "too many upvalues");
+  luaL_checkstack(L, nup,
+    locale_get(L, "diagnostics", "too·many·upvalues", "too many upvalues"));
   for (; l->name != NULL; l++) {  /* fill the table with given functions */
     if (l->func == NULL)  /* placeholder? */
       lua_pushboolean(L, 0);
