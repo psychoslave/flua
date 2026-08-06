@@ -1,36 +1,43 @@
-local function shq(s)
-  return "'" .. tostring(s):gsub("'", [['"'"']]) .. "'"
-end
+funkcio shq(s)
+  redonu "'" .. tostring(s):gsub("'", [['"'"']]) .. "'"
+fino
 
-local function run(command)
-  local out = os.tmpname()
-  local cmd = command .. " > " .. shq(out) .. " 2>&1"
-  local ok = os.execute(cmd)
-  local f = assert(io.open(out, "r"))
-  local text = f:read("a")
+funkcio run(command)
+  loka out = os.tmpname()
+  loka cmd = command .. " > " .. shq(out) .. " 2>&1"
+  loka ok = os.execute(cmd)
+  loka f = assert(io.open(out, "r"))
+  loka text = f:read("a")
   f:close()
   os.remove(out)
-  return ok, text
-end
+  redonu ok, text
+fino
 
-local locale = assert(dofile("locale/esperanto.lua"))
-assert(locale.repl["usage·description"]:find("⟪plain locale mode⟫", 1, true))
+dofile("locale/esperanto/esperanto.lua")
+loka locale = assert(locale)
+assert(locale.keywords["conditional·protasis"] == "se")
+assert(locale.keywords["postcondition·iteration·introducer"] == "ripetu")
+assert(locale.lexical["string·token"] == "<ĉeno>")
+assert(locale.repl["usage·description"]:find("⟪plain locale mode⟫", 1, vera))
 assert(locale.diagnostics["warning·prefix"] == "Lua averto: ")
 
-local function must_find(command, needle)
-  local ok, out = run(command)
+funkcio must_find(command, needle)
+  loka ok, out = run(command)
   assert(ok, out)
-  assert(out:find(needle, 1, true), out)
-end
+  assert(out:find(needle, 1, vera), out)
+fino
 
-local function must_fail_find(command, needle)
-  local ok, out = run(command)
-  assert(not ok, out)
-  assert(out:find(needle, 1, true), out)
-end
+funkcio must_fail_find(command, needle)
+  loka ok, out = run(command)
+  assert(ne ok, out)
+  assert(out:find(needle, 1, vera), out)
+fino
 
-must_find([[env LUA_LOCALE=esperanto ./lua -W -e "warn('saluton')"]], "Lua averto: saluton")
-must_fail_find([[env LUA_LOCALE=esperanto ./lua -e "error({})"]], "erarobjekto estas")
-must_find([[env LUA_LOCALE=esperanto ./lua -P -e "print('esperanto-ok')"]], "esperanto-ok")
+must_find([[./lua -e "se vera tiam print('esperanto-ok') fino"]], "esperanto-ok")
+must_find([[./lua -e "por i en ipairs({1}) faru print(i) fino"]], "1")
+must_find([[./lua -e "ripetu print('esperanto-loop-ok') ĝis vera"]], "esperanto-loop-ok")
+must_find([[./lua -W -e "warn('saluton')"]], "Lua averto: saluton")
+must_fail_find([[./lua -e "error({})"]], "erarobjekto estas")
+must_find([[./lua -P -e "print('esperanto-ok')"]], "esperanto-ok")
 
 print("esperanto-locale-ok")

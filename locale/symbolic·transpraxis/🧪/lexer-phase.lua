@@ -25,17 +25,10 @@ local function expect_print(src, expected)
 end
 
 local function load_symbolic_locale()
-  local chunk = dofile("locale/symbolic·transpraxis.lua")
+  local chunk = dofile("locale/symbolic·transpraxis/symbolic·transpraxis.lua")
   if chunk == nil then
     chunk = _G.locale
     _G.locale = nil
-  end
-  if chunk == nil then
-    chunk = dofile("../locale/symbolic·transpraxis.lua")
-    if chunk == nil then
-      chunk = _G.locale
-      _G.locale = nil
-    end
   end
   return chunk
 end

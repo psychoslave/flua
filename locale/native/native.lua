@@ -1,7 +1,7 @@
 -- Lua 5.5 native (English) locale
 -- Identifier convention: midpoint·agglutination describing the operation.
 
-return {
+locale = {
   -- Used by lexer bootstrap/runtime token mapping (llex.c) and by
   -- utilitary/generate-native-locale-kernel-header.lua for kernel tables.
   keywords = {

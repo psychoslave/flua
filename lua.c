@@ -484,7 +484,7 @@ static int load_locale_file (lua_State *L, const char *locale,
                              const char *registry_key) {
   char chunkname[256];
   char parentname[256];
-  int n = snprintf(chunkname, sizeof(chunkname), "locale/%s.lua", locale);
+  int n = snprintf(chunkname, sizeof(chunkname), "locale/%s/%s.lua", locale, locale);
   int status;
   if (n <= 0 || n >= cast_int(sizeof(chunkname))) {
     locale_warning(L, locale, locale_get(L, "diagnostics",
@@ -495,7 +495,7 @@ static int load_locale_file (lua_State *L, const char *locale,
   status = luaL_loadfilex(L, chunkname, "t");
   if (status == LUA_ERRFILE) {
     lua_pop(L, 1);
-    n = snprintf(parentname, sizeof(parentname), "../locale/%s.lua", locale);
+    n = snprintf(parentname, sizeof(parentname), "../locale/%s/%s.lua", locale, locale);
     if (n > 0 && n < cast_int(sizeof(parentname)))
       status = luaL_loadfilex(L, parentname, "t");
   }

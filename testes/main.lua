@@ -198,7 +198,7 @@ assert(not string.find(defaultpath, "xxx") and
 
 print("testing option '-P'")
 
-assert(os.execute("mkdir -p locale"))
+assert(os.execute("mkdir -p locale/symtmp"))
 prepfile([[
 return {
   operators = {
@@ -214,7 +214,7 @@ return {
     ["unexpected·symbol"] = "⚠",
   },
 }
-]], false, "locale/symtmp.lua")
+]], false, "locale/symtmp/symtmp.lua")
 
 prepfile("print(type(_G), type(rawget(_G, '🌐')))")
 RUN([[env LUA_LOCALE='symtmp' lua %s > %s]], prog, out)
@@ -230,7 +230,8 @@ NoRun("⚠", [[env LUA_LOCALE='symtmp' lua -P %s]], prog)
 prepfile("a←1; print(a)")
 RUN([[env LUA_LOCALE='symtmp' lua -P %s > %s]], prog, out)
 checkout("1\n")
-assert(os.remove("locale/symtmp.lua"))
+assert(os.remove("locale/symtmp/symtmp.lua"))
+assert(os.execute("rmdir locale/symtmp"))
 
 
 -- (LUA_READLINELIB was introduced in 5.5.1)
