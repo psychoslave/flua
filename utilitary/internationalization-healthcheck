@@ -159,7 +159,7 @@ local function main()
 
   if not must_run(
       "Test Esperanto locale smoke suite",
-      [[./lua locale/esperanto/testaro/main.lua]],
+      [[./lua locale/esperanto/testaro/ĉeftestaro.lua]],
       20) then
     return 1
   end
