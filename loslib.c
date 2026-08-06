@@ -468,7 +468,7 @@ static const luaL_Reg syslib[] = {
 LUAMOD_API int luaopen_os (lua_State *L) {
   const char *exit_alias;
   luaL_newlib(L, syslib);
-  exit_alias = locale_get(L, "aliases", "os·exit·method", "exit");
+  exit_alias = locale_get(L, "aliases", "os·exit·method", "os·exit·method");
   if (exit_alias[0] != '\0' && strcmp(exit_alias, "exit") != 0) {
     lua_pushvalue(L, -1);  /* upvalue: os table */
     lua_pushcclosure(L, os_exit_alias, 1);

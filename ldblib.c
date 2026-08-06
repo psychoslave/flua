@@ -340,11 +340,9 @@ static int db_upvaluejoin (lua_State *L) {
   checkupval(L, 1, 2, &n1);
   checkupval(L, 3, 4, &n2);
   luaL_argcheck(L, !lua_iscfunction(L, 1), 1,
-                locale_get(L, "diagnostics", "lua·function·expected",
-                           "Lua function expected"));
+                locale_get(L, "diagnostics", "lua·function·expected", "lua·function·expected"));
   luaL_argcheck(L, !lua_iscfunction(L, 3), 3,
-                locale_get(L, "diagnostics", "lua·function·expected",
-                           "Lua function expected"));
+                locale_get(L, "diagnostics", "lua·function·expected", "lua·function·expected"));
   lua_upvaluejoin(L, 1, n1, 3, n2);
   return 0;
 }
@@ -454,8 +452,7 @@ static int db_gethook (lua_State *L) {
 static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
-    lua_writestringerror("%s", locale_get(L, "repl",
-      "debug·prompt", "lua_debug> "));
+    lua_writestringerror("%s", locale_get(L, "repl", "debug·prompt", "debug·prompt"));
     if (fgets(buffer, sizeof(buffer), stdin) == NULL ||
         strcmp(buffer, "cont\n") == 0)
       return 0;

@@ -95,9 +95,7 @@ static const char *localized_why (LoadState *S, const char *why) {
 
 static l_noret error (LoadState *S, const char *why) {
   why = localized_why(S, why);
-  luaO_pushfstring(S->L, locale_get(S->L, "diagnostics",
-                                    "bad·binary·format",
-                                    "%s: bad binary format (%s)"),
+  luaO_pushfstring(S->L, locale_get(S->L, "diagnostics", "bad·binary·format", "bad·binary·format"),
                    S->name, why);
   luaD_throw(S->L, LUA_ERRSYNTAX);
 }
@@ -406,8 +404,7 @@ static void checkliteral (LoadState *S, const char *s, const char *msg) {
 
 
 static l_noret numerror (LoadState *S, const char *what, const char *tname) {
-  const char *msg = luaO_pushfstring(S->L, locale_get(S->L, "diagnostics",
-    "binary·number·mismatch", "%s %s mismatch"), tname, what);
+  const char *msg = luaO_pushfstring(S->L, locale_get(S->L, "diagnostics", "binary·number·mismatch", "binary·number·mismatch"), tname, what);
   error(S, msg);
 }
 

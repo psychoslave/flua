@@ -304,7 +304,8 @@ static int pushargs (lua_State *L) {
       locale_get(L, "diagnostics",
                  "argument·table·expected", "'arg' is not a table"));
   n = (int)luaL_len(L, -1);
-  luaL_checkstack(L, n + 3, "too many arguments to script");
+  luaL_checkstack(L, n + 3,
+    locale_get(L, "diagnostics", "too·many·arguments·to·script", "too many arguments to script"));
   for (i = 1; i <= n; i++)
     lua_rawgeti(L, -i, i);
   lua_remove(L, -i);  /* remove table from the stack */
@@ -492,14 +493,11 @@ static int load_locale_file (lua_State *L, const char *locale,
     return LUA_ERRFILE;
   }
   status = luaL_loadfilex(L, chunkname, "t");
-  if (status != LUA_OK) {
-    const char *msg = lua_tostring(L, -1);
-    if (msg != NULL && strstr(msg, "cannot open") != NULL) {
-      lua_pop(L, 1);
-      n = snprintf(parentname, sizeof(parentname), "../locale/%s.lua", locale);
-      if (n > 0 && n < cast_int(sizeof(parentname)))
-        status = luaL_loadfilex(L, parentname, "t");
-    }
+  if (status == LUA_ERRFILE) {
+    lua_pop(L, 1);
+    n = snprintf(parentname, sizeof(parentname), "../locale/%s.lua", locale);
+    if (n > 0 && n < cast_int(sizeof(parentname)))
+      status = luaL_loadfilex(L, parentname, "t");
   }
   if (status == LUA_OK)
     status = docall(L, 0, 1);  /* locale file should return one value */
@@ -532,19 +530,21 @@ static int load_locale_file (lua_State *L, const char *locale,
 
 
 static int handle_lualocale (lua_State *L) {
-  const char *locale = l_getenv(LUA_LOCALE_VAR);
-  int base_ok = (load_locale_file(L, LUA_BASE_LOCALE, "LUA_BASE_LOCALE_TABLE") == LUA_OK);
+  const char *locale = l_getenv(locale_get(L, "internals", "locale·environment·variable", LUA_LOCALE_VAR));
+  const char *base_key = "LUA_BASE_LOCALE_TABLE";
+  const char *active_key = "LUA_LOCALE_TABLE";
+  int base_ok = (load_locale_file(L, LUA_BASE_LOCALE, base_key) == LUA_OK);
   const char *active = (locale != NULL && locale[0] != '\0') ? locale : LUA_DEFAULT_LOCALE;
   if (active != NULL && active[0] != '\0') {
     if (strcmp(active, LUA_BASE_LOCALE) == 0 && base_ok) {
-      lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE");
-      lua_setfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE");
+      lua_getfield(L, LUA_REGISTRYINDEX, base_key);
+      lua_setfield(L, LUA_REGISTRYINDEX, active_key);
     }
     else {
-      int active_ok = (load_locale_file(L, active, "LUA_LOCALE_TABLE") == LUA_OK);
+      int active_ok = (load_locale_file(L, active, active_key) == LUA_OK);
       if (!active_ok && base_ok) {
-        lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE");
-        lua_setfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE");
+        lua_getfield(L, LUA_REGISTRYINDEX, base_key);
+        lua_setfield(L, LUA_REGISTRYINDEX, active_key);
       }
     }
   }
@@ -663,7 +663,7 @@ static void lua_freeline (char *line) {
 #include <dlfcn.h>
 
 static void lua_initreadline (lua_State *L) {
-  const char *rllib = l_getenv(LUA_RLLIB_VAR);  /* name of readline library */
+  const char *rllib = l_getenv(locale_get(L, "internals", "readline·library·environment·variable", LUA_RLLIB_VAR));  /* name of readline library */
   void *lib;  /* library handle */
   if (rllib == NULL)  /* no environment variable? */
     rllib = LUA_READLINELIB;  /* use default name */
@@ -671,14 +671,14 @@ static void lua_initreadline (lua_State *L) {
   if (lib != NULL) {
     const char **name = cast(const char**, dlsym(lib, "rl_readline_name"));
     if (name != NULL)
-      *name = locale_get(L, "repl", "interpreter·identity", "lua");
+      *name = locale_get(L, "repl", "interpreter·identity", "interpreter·identity");
     l_readline = cast(l_readlineT, cast_func(dlsym(lib, "readline")));
     l_addhist = cast(l_addhistT, cast_func(dlsym(lib, "add_history")));
     if (l_readline != NULL)  /* could load readline function? */
       return;  /* everything ok */
     /* else emit a warning */
   }
-  lua_warning(L, "unable to load readline library '", 1);
+  lua_warning(L, locale_get(L, "diagnostics", "unable·to·load·readline·library", "unable to load readline library '"), 1);
   lua_warning(L, rllib, 1);
   lua_warning(L, "'", 0);
 }
@@ -760,7 +760,7 @@ static int addreturn (lua_State *L) {
   const char *line = lua_tostring(L, -1);  /* original line */
   const char *retline = lua_pushfstring(L, "return %s", line);
   const char *name = locale_get(L, "repl",
-                                "interactive·source·identity", "=stdin");
+                                "interactive·source·identity", "interactive·source·identity");
   int status = luaL_loadbufferx(L, retline, strlen(retline), name, "t");
   if (status == LUA_OK)
     lua_remove(L, -2);  /* remove modified line */
@@ -792,7 +792,7 @@ static int multiline (lua_State *L) {
   size_t len;
   const char *line = lua_tolstring(L, 1, &len);  /* get first line */
   const char *name = locale_get(L, "repl",
-                                "interactive·source·identity", "=stdin");
+                                "interactive·source·identity", "interactive·source·identity");
   checklocal(L, line);
   for (;;) {  /* repeat until gets a complete statement */
     int status = luaL_loadbufferx(L, line, len, name, "t");  /* try it */
@@ -850,7 +850,7 @@ static int loadline (lua_State *L) {
       status = LUA_OK;  /* stack: [1]=line, [2]=compiled expression */
     else
       status = luaL_loadbufferx(L, s, len,
-                 locale_get(L, "repl", "interactive·source·identity", "=stdin"),
+                 locale_get(L, "repl", "interactive·source·identity", "interactive·source·identity"),
                  "t");
       /* stack: [1]=line, [2]=statement result/error */
   }
@@ -869,7 +869,8 @@ static int loadline (lua_State *L) {
 static void l_print (lua_State *L) {
   int n = lua_gettop(L);
   if (n > 0) {  /* any result to be printed? */
-    luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
+    luaL_checkstack(L, LUA_MINSTACK,
+      locale_get(L, "diagnostics", "too·many·results·to·print", "too many results to print"));
     lua_getglobal(L, "print");
     lua_insert(L, 1);
     if (lua_pcall(L, n, 0, 0) != LUA_OK)
@@ -934,12 +935,14 @@ static int pmain (lua_State *L) {
   if (args & has_E) {  /* option '-E'? */
     l_getenv = &no_getenv;  /* program will ignore environment variables */
     lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
-    lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
+    lua_setfield(L, LUA_REGISTRYINDEX,
+      locale_get(L, "internals", "no·environment·registry·flag", "LUA_NOENV"));
   }
   else
     l_getenv = &getenv;
   lua_pushboolean(L, (args & has_P) ? 1 : 0);
-  lua_setfield(L, LUA_REGISTRYINDEX, "LUA_PLAINLOCALE");
+  lua_setfield(L, LUA_REGISTRYINDEX,
+    locale_get(L, "internals", "plain·locale·registry·flag", "LUA_PLAINLOCALE"));
   if (handle_lualocale(L) != LUA_OK)  /* load locale from LUA_LOCALE */
     return 0;
   luai_openlibs(L);  /* open standard libraries */

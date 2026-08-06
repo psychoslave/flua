@@ -83,8 +83,7 @@ static const char *locale_get (lua_State *L,
 
 
 static l_noret error_expected (LexState *ls, int token) {
-  const char *fmt = locale_get(ls->L, "diagnostics",
-                               "token·expected", "%s expected");
+  const char *fmt = locale_get(ls->L, "diagnostics", "token·expected", "token·expected");
   luaX_syntaxerror(ls,
       luaO_pushfstring(ls->L, fmt, luaX_token2str(ls, token)));
 }
@@ -94,13 +93,10 @@ static l_noret errorlimit (FuncState *fs, int limit, const char *what) {
   lua_State *L = fs->ls->L;
   const char *msg;
   int line = fs->f->linedefined;
-  const char *mainwhere = locale_get(L, "diagnostics",
-                                     "main·function·identity", "main function");
-  const char *linefmt = locale_get(L, "diagnostics",
-                                   "function·at·line", "function at line %d");
+  const char *mainwhere = locale_get(L, "diagnostics", "main·function·identity", "main·function·identity");
+  const char *linefmt = locale_get(L, "diagnostics", "function·at·line", "function·at·line");
   const char *where = (line == 0) ? mainwhere : luaO_pushfstring(L, linefmt, line);
-  msg = luaO_pushfstring(L, locale_get(L, "diagnostics",
-      "too·many·elements·in·scope", "too many %s (limit is %d) in %s"),
+  msg = luaO_pushfstring(L, locale_get(L, "diagnostics", "too·many·elements·in·scope", "too·many·elements·in·scope"),
                              what, limit, where);
   luaX_syntaxerror(fs->ls, msg);
 }
@@ -154,9 +150,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
     if (where == ls->linenumber)  /* all in the same line? */
       error_expected(ls, what);  /* do not need a complex message */
     else {
-      const char *fmt = locale_get(ls->L, "diagnostics",
-                                   "token·expected·to·close",
-                                   "%s expected (to close %s at line %d)");
+      const char *fmt = locale_get(ls->L, "diagnostics", "token·expected·to·close", "token·expected·to·close");
       luaX_syntaxerror(ls, luaO_pushfstring(ls->L,
              fmt,
               luaX_token2str(ls, what), luaX_token2str(ls, who), where));
@@ -342,9 +336,7 @@ static void check_readonly (LexState *ls, expdesc *e) {
       return;  /* integer index cannot be read-only */
   }
   if (varname)
-    luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                     "assignment·to·immutable",
-                                     "attempt to assign to const variable '%s'"),
+    luaK_semerror(ls, locale_get(ls->L, "diagnostics", "assignment·to·immutable", "assignment·to·immutable"),
                       getstr(varname));
 }
 
@@ -532,9 +524,7 @@ static void buildglobal (LexState *ls, TString *varname, expdesc *var) {
   init_exp(var, VGLOBAL, -1);  /* global by default */
   singlevaraux(fs, ls->envn, var, 1);  /* get environment variable */
   if (var->k == VGLOBAL)
-    luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                 "global·access·violation",
-                                 "%s is global when accessing variable '%s'"),
+    luaK_semerror(ls, locale_get(ls->L, "diagnostics", "global·access·violation", "global·access·violation"),
                       LUA_ENV, getstr(varname));
   luaK_exp2anyregup(fs, var);  /* _ENV could be a constant */
   codestring(&key, varname);  /* key is variable name */
@@ -554,9 +544,7 @@ static void buildvar (LexState *ls, TString *varname, expdesc *var) {
     int info = var->u.info;
     /* global by default in the scope of a global declaration? */
     if (info == -2)
-      luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                   "undeclared·variable",
-                                   "variable '%s' not declared"),
+      luaK_semerror(ls, locale_get(ls->L, "diagnostics", "undeclared·variable", "undeclared·variable"),
                     getstr(varname));
     buildglobal(ls, varname, var);
     if (info != -1 && ls->dyd->actvar.arr[info].vd.kind == GDKCONST)
@@ -613,9 +601,7 @@ static l_noret jumpscopeerror (LexState *ls, Labeldesc *gt) {
   TString *tsname = getlocalvardesc(ls->fs, gt->nactvar)->vd.name;
   const char *varname = (tsname != NULL) ? getstr(tsname) : "*";
   luaK_semerror(ls,
-     locale_get(ls->L, "diagnostics",
-               "transfer·scope·violation",
-               "<goto %s> at line %d jumps into the scope of '%s'"),
+     locale_get(ls->L, "diagnostics", "transfer·scope·violation", "transfer·scope·violation"),
       getstr(gt->name), gt->line, varname);  /* raise the error */
 }
 
@@ -771,9 +757,7 @@ static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isloop) {
 static l_noret undefgoto (LexState *ls, Labeldesc *gt) {
   /* breaks are checked when created, cannot be undefined */
   lua_assert(!eqstr(gt->name, ls->brkn));
-  luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                               "label·undefined",
-                               "no visible label '%s' for <goto> at line %d"),
+  luaK_semerror(ls, locale_get(ls->L, "diagnostics", "label·undefined", "label·undefined"),
                     getstr(gt->name), gt->line);
 }
 
@@ -1124,9 +1108,7 @@ static void parlist (LexState *ls) {
           break;
         }
         default: luaX_syntaxerror(ls,
-                  locale_get(ls->L, "diagnostics",
-                               "name·or·variadic·expansion·expected",
-                             "<name> or '...' expected"));
+                  locale_get(ls->L, "diagnostics", "name·or·variadic·expansion·expected", "name·or·variadic·expansion·expected"));
       }
     } while (!varargk && testnext(ls, ','));
   }
@@ -1151,8 +1133,7 @@ static void body (LexState *ls, expdesc *e, int ismethod, int line) {
   checknext(ls, '(');
   if (ismethod) {
     {
-      const char *selfname = locale_get(ls->L, "internals",
-                                        "implicit·self·parameter", "self");
+      const char *selfname = locale_get(ls->L, "internals", "implicit·self·parameter", "implicit·self·parameter");
       new_localvar(ls, luaX_newstring(ls, selfname, strlen(selfname)));
     }  /* create locale-aware 'self' parameter */
     adjustlocalvars(ls, 1);
@@ -1208,9 +1189,7 @@ static void funcargs (LexState *ls, expdesc *f) {
       break;
     }
     default: {
-      luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics",
-                                      "function·arguments·expected",
-                                      "function arguments expected"));
+      luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics", "function·arguments·expected", "function·arguments·expected"));
       return;  /* to avoid warnings */
     }
   }
@@ -1256,9 +1235,7 @@ static void primaryexp (LexState *ls, expdesc *v) {
       return;
     }
     default: {
-      luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics",
-                                      "unexpected·symbol",
-                                      "unexpected symbol"));
+      luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics", "unexpected·symbol", "unexpected·symbol"));
     }
   }
 }
@@ -1334,9 +1311,7 @@ static void simpleexp (LexState *ls, expdesc *v) {
     case TK_DOTS: {  /* vararg */
       FuncState *fs = ls->fs;
       check_condition(ls, isvararg(fs->f),
-        locale_get(ls->L, "diagnostics",
-                   "variadic·expansion·outside·variadic·function",
-                   "cannot use '...' outside a vararg function"));
+        locale_get(ls->L, "diagnostics", "variadic·expansion·outside·variadic·function", "variadic·expansion·outside·variadic·function"));
       init_exp(v, VVARARG, luaK_codeABC(fs, OP_VARARG, 0, fs->f->numparams, 1));
       break;
     }
@@ -1550,8 +1525,7 @@ static void storevartop (FuncState *fs, expdesc *var) {
 static void restassign (LexState *ls, struct LHS_assign *lh, int nvars) {
   expdesc e;
   check_condition(ls, vkisvar(lh->v.k),
-                  locale_get(ls->L, "diagnostics",
-                             "generic·syntax·error", "syntax error"));
+                  locale_get(ls->L, "diagnostics", "generic·syntax·error", "generic·syntax·error"));
   check_readonly(ls, &lh->v);
   if (testnext(ls, ',')) {  /* restassign -> ',' suffixedexp restassign */
     struct LHS_assign nv;
@@ -1604,9 +1578,7 @@ static void breakstat (LexState *ls, int line) {
     if (bl->isloop)  /* found one? */
       goto ok;
   }
-  luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics",
-                                  "iteration·escape·outside·iteration",
-                                  "break outside loop"));
+  luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics", "iteration·escape·outside·iteration", "iteration·escape·outside·iteration"));
  ok:
   bl->isloop = 2;  /* signal that block has pending breaks */
   luaX_next(ls);  /* skip break */
@@ -1621,9 +1593,7 @@ static void breakstat (LexState *ls, int line) {
 static void checkrepeated (LexState *ls, TString *name) {
   Labeldesc *lb = findlabel(ls, name, ls->fs->firstlabel);
   if (l_unlikely(lb != NULL))  /* already defined? */
-    luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                 "label·redefinition",
-                                 "label '%s' already defined on line %d"),
+    luaK_semerror(ls, locale_get(ls->L, "diagnostics", "label·redefinition", "label·redefinition"),
                       getstr(name), lb->line);  /* error */
 }
 
@@ -1706,9 +1676,7 @@ static void fixforjump (FuncState *fs, int pc, int dest, int back) {
   if (back)
     offset = -offset;
   if (l_unlikely(offset > MAXARG_Bx))
-    luaX_syntaxerror(fs->ls, locale_get(fs->ls->L, "diagnostics",
-                                        "control·structure·too·long",
-                                        "control structure too long"));
+    luaX_syntaxerror(fs->ls, locale_get(fs->ls->L, "diagnostics", "control·structure·too·long", "control·structure·too·long"));
   SETARG_Bx(*jmp, offset);
 }
 
@@ -1802,9 +1770,7 @@ static void forstat (LexState *ls, int line) {
   switch (ls->t.token) {
     case '=': fornum(ls, varname, line); break;
     case ',': case TK_IN: forlist(ls, varname); break;
-    default: luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics",
-                                             "assignment·or·iteration·domain·expected",
-                                             "'=' or 'in' expected"));
+    default: luaX_syntaxerror(ls, locale_get(ls->L, "diagnostics", "assignment·or·iteration·domain·expected", "assignment·or·iteration·domain·expected"));
   }
   check_match(ls, TK_END, TK_FOR, line);
   leaveblock(fs);  /* loop scope ('break' jumps to this point) */
@@ -1858,16 +1824,12 @@ static lu_byte getvarattribute (LexState *ls, lu_byte df) {
     TString *ts = str_checkname(ls);
     const char *attr = getstr(ts);
     checknext(ls, '>');
-    if (strcmp(attr, locale_get(ls->L, "attributes",
-                                "immutability·attribute", "const")) == 0)
+    if (strcmp(attr, locale_get(ls->L, "attributes", "immutability·attribute", "immutability·attribute")) == 0)
       return RDKCONST;  /* read-only variable */
-    else if (strcmp(attr, locale_get(ls->L, "attributes",
-                                     "closure·attribute", "close")) == 0)
+    else if (strcmp(attr, locale_get(ls->L, "attributes", "closure·attribute", "closure·attribute")) == 0)
       return RDKTOCLOSE;  /* to-be-closed variable */
     else
-      luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                   "unknown·attribute",
-                                   "unknown attribute '%s'"), attr);
+      luaK_semerror(ls, locale_get(ls->L, "diagnostics", "unknown·attribute", "unknown·attribute"), attr);
   }
   return df;  /* return default value */
 }
@@ -1898,9 +1860,7 @@ static void localstat (LexState *ls) {
     vidx = new_varkind(ls, vname, kind);  /* predeclare it */
     if (kind == RDKTOCLOSE) {  /* to-be-closed? */
       if (toclose != -1)  /* one already present? */
-        luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                     "multiple·to·be·closed·variables",
-                                     "multiple to-be-closed variables in local list"));
+        luaK_semerror(ls, locale_get(ls->L, "diagnostics", "multiple·to·be·closed·variables", "multiple·to·be·closed·variables"));
       toclose = fs->nactvar + nvars;
     }
     nvars++;
@@ -1931,9 +1891,7 @@ static lu_byte getglobalattribute (LexState *ls, lu_byte df) {
   lu_byte kind = getvarattribute(ls, df);
   switch (kind) {
     case RDKTOCLOSE:
-      luaK_semerror(ls, locale_get(ls->L, "diagnostics",
-                                   "global·variables·cannot·be·to·be·closed",
-                                   "global variables cannot be to-be-closed"));
+      luaK_semerror(ls, locale_get(ls->L, "diagnostics", "global·variables·cannot·be·to·be·closed", "global·variables·cannot·be·to·be·closed"));
       return kind;  /* to avoid warnings */
     case RDKCONST:
       return GDKCONST;  /* adjust kind for global variable */
@@ -2078,8 +2036,7 @@ static void exprstat (LexState *ls) {
   else {  /* stat -> func */
     Instruction *inst;
     check_condition(ls, v.v.k == VCALL,
-                    locale_get(ls->L, "diagnostics",
-                               "generic·syntax·error", "syntax error"));
+                    locale_get(ls->L, "diagnostics", "generic·syntax·error", "generic·syntax·error"));
     inst = &getinstruction(fs, &v.v);
     SETARG_C(*inst, 1);  /* call statement uses no results */
   }

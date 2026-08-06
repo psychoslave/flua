@@ -295,6 +295,14 @@ locale = {
     ["unfinished·string"] = "⚠ ⚫🏭🔗:(️🏗🔗∧📭🔣＂ ∧ ¬📪🔣＂)",
     -- Keep syntax errors dense while avoiding letter-derived glyphs.
     ["generic·syntax·error"] = "⚠ ⚫(🖌📤🎨) ∧ 🖼️ ⊬ ⟨…=…⟩",
+    -- Keep parser token expectation format-compatible (used with token names).
+    ["token·expected"] = "%s expected",
+    ["token·expected·to·close"] = "%s expected (to close %s at line %d)",
+    -- CLI overflow when a script gets too many args; the symbolic locale keeps
+    -- the native phrasing here until we decide on a better symbolic form.
+    ["too·many·arguments·to·script"] = "too many arguments to script",
+    ["too·many·results·to·print"] = "too many results to print",
+    ["unable·to·load·readline·library"] = "unable to load readline library '",
     -- Keep unexpected-symbol diagnostics explicit with non-letter symbolism.
     ["unexpected·symbol"] = "⚠ (💬⛔💭) ∧ 🖼️ ⊬ ⟨…⇔…⟩",
     -- ☯ here as "we expect harmony in complementary construction" that yin/yang symbolize perfectly.
@@ -302,6 +310,15 @@ locale = {
   },
 
   internals = {
+    -- Internal names can leak into errors or external APIs; keep them local
+    -- here until a dedicated symbolic mapping is worth the churn.
+    ["init·environment·variable"] = "LUA_INIT",
+    ["locale·environment·variable"] = "LUA_LOCALE",
+    ["readline·library·environment·variable"] = "LUA_READLINELIB",
+    ["locale·table·registry·key"] = "LUA_LOCALE_TABLE",
+    ["base·locale·table·registry·key"] = "LUA_BASE_LOCALE_TABLE",
+    ["no·environment·registry·flag"] = "LUA_NOENV",
+    ["plain·locale·registry·flag"] = "LUA_PLAINLOCALE",
     -- 🧭 continues the spatial metaphor for current lexical environment.
     ["environment·identifier"] = "🧭",
     -- 🌐 marks globally shared namespace.

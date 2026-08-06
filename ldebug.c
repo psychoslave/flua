@@ -744,9 +744,7 @@ static const char *formatvarinfo (lua_State *L, const char *kind,
   if (kind == NULL)
     return "";  /* no information */
   else
-    return luaO_pushfstring(L, locale_get(L, "diagnostics",
-                                          "varinfo·kind·name",
-                                          " (%s '%s')"),
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "varinfo·kind·name", "varinfo·kind·name"),
                             kind, name);
 }
 
@@ -856,18 +854,14 @@ l_noret luaG_errnnil (lua_State *L, LClosure *cl, int k) {
 const char *luaG_addinfo (lua_State *L, const char *msg, TString *src,
                                         int line) {
   if (src == NULL)  /* no debug information? */
-    return luaO_pushfstring(L, locale_get(L, "diagnostics",
-                                          "unknown·source·line·message",
-                                          "?:?: %s"),
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "unknown·source·line·message", "unknown·source·line·message"),
                             msg);
   else {
     char buff[LUA_IDSIZE];
     size_t idlen;
     const char *id = getlstr(src, idlen);
     luaO_chunkid(buff, id, idlen);
-    return luaO_pushfstring(L, locale_get(L, "diagnostics",
-                                          "source·line·message",
-                                          "%s:%d: %s"),
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "source·line·message", "source·line·message"),
                             buff, line, msg);
   }
 }

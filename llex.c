@@ -369,9 +369,7 @@ static void save (LexState *ls, int c) {
   if (luaZ_bufflen(b) + 1 > luaZ_sizebuffer(b)) {
     size_t newsize = luaZ_sizebuffer(b);  /* get old size */;
     if (newsize >= (MAX_SIZE/3 * 2))  /* larger than MAX_SIZE/1.5 ? */
-      lexerror(ls, locale_get(ls->L, "diagnostics",
-                                     "lexical·element·overflow",
-                                     "lexical element too long"), 0);
+      lexerror(ls, locale_get(ls->L, "diagnostics", "lexical·element·overflow", "lexical·element·overflow"), 0);
     newsize += (newsize >> 1);  /* new size is 1.5 times the old one */
     luaZ_resizebuffer(ls->L, b, newsize);
   }
@@ -479,9 +477,7 @@ static void inclinenumber (LexState *ls) {
   if (currIsNewline(ls) && ls->current != old)
     next(ls);  /* skip '\n\r' or '\r\n' */
   if (++ls->linenumber >= INT_MAX)
-    lexerror(ls, locale_get(ls->L, "diagnostics",
-                                   "chunk·line·overflow",
-                                   "chunk has too many lines"), 0);
+    lexerror(ls, locale_get(ls->L, "diagnostics", "chunk·line·overflow", "chunk·line·overflow"), 0);
 }
 
 
@@ -502,16 +498,14 @@ void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source,
   {
     const char *envname = locale_get(L, "internals",
                                      "environment·identifier", LUA_ENV);
-    const char *brkname = locale_get(L, "keywords",
-                                     "iteration·escape", "break");
+    const char *brkname = locale_get(L, "keywords", "iteration·escape", "iteration·escape");
     ls->envn = luaX_newstring(ls, envname, strlen(envname));
     ls->brkn = luaX_newstring(ls, brkname, strlen(brkname));
   }
 #if LUA_COMPAT_GLOBAL
   /* compatibility mode: "global" is not a reserved word */
   {
-    const char *glbname = locale_get(L, "keywords",
-                                     "dynamic·scope·declaration", "global");
+    const char *glbname = locale_get(L, "keywords", "dynamic·scope·declaration", "dynamic·scope·declaration");
     ls->glbn = luaX_newstring(ls, glbname, strlen(glbname));
   }
   ls->glbn->extra = 0;  /* mark it as not reserved */
@@ -693,9 +687,7 @@ static int read_numeral (LexState *ls, SemInfo *seminfo) {
     save_and_next(ls);  /* force an error */
   save(ls, '\0');
   if (luaO_str2num(luaZ_buffer(ls->buff), &obj) == 0)  /* format error? */
-    lexerror(ls, locale_get(ls->L, "diagnostics",
-                                   "malformed·numeral",
-                                   "malformed number"), TK_FLT);
+    lexerror(ls, locale_get(ls->L, "diagnostics", "malformed·numeral", "malformed·numeral"), TK_FLT);
   if (ttisinteger(&obj)) {
     seminfo->i = ivalue(&obj);
     return TK_INT;
@@ -739,9 +731,7 @@ static void read_long_string (LexState *ls, SemInfo *seminfo, size_t sep) {
       case EOZ: {  /* error */
         const char *what = (seminfo ? "string" : "comment");
         const char *msg = luaO_pushfstring(ls->L,
-                     locale_get(ls->L, "diagnostics",
-                                "unfinished·long·construct",
-                                "unfinished long %s (starting at line %d)"),
+                     locale_get(ls->L, "diagnostics", "unfinished·long·construct", "unfinished·long·construct"),
                      what, line);
         lexerror(ls, msg, TK_EOS);
         break;  /* to avoid warnings */
@@ -783,9 +773,7 @@ static void esccheck (LexState *ls, int c, const char *msg) {
 static int gethexa (LexState *ls) {
   save_and_next(ls);
   esccheck(ls, lisxdigit(ls->current),
-              locale_get(ls->L, "diagnostics",
-                         "hexadecimal·digit·expected",
-                         "hexadecimal digit expected"));
+              locale_get(ls->L, "diagnostics", "hexadecimal·digit·expected", "hexadecimal·digit·expected"));
   return luaO_hexavalue(ls->current);
 }
 
@@ -808,19 +796,16 @@ static l_uint32 readutf8esc (LexState *ls) {
   int i = 4;  /* number of chars to be removed: start with #"\u{X" */
   save_and_next(ls);  /* skip 'u' */
   esccheck(ls, ls->current == '{',
-              locale_get(ls->L, "diagnostics",
-                         "missing·opening·brace", "missing '{'"));
+              locale_get(ls->L, "diagnostics", "missing·opening·brace", "missing·opening·brace"));
   r = cast_uint(gethexa(ls));  /* must have at least one digit */
   while (cast_void(save_and_next(ls)), lisxdigit(ls->current)) {
     i++;
     esccheck(ls, r <= (0x7FFFFFFFu >> 4),
-                locale_get(ls->L, "diagnostics",
-                           "utf8·value·too·large", "UTF-8 value too large"));
+                locale_get(ls->L, "diagnostics", "utf8·value·too·large", "utf8·value·too·large"));
     r = (r << 4) + luaO_hexavalue(ls->current);
   }
   esccheck(ls, ls->current == '}',
-              locale_get(ls->L, "diagnostics",
-                         "missing·closing·brace", "missing '}'"));
+              locale_get(ls->L, "diagnostics", "missing·closing·brace", "missing·closing·brace"));
   next(ls);  /* skip '}' */
   luaZ_buffremove(ls->buff, i);  /* remove saved chars from buffer */
   return r;
@@ -843,8 +828,7 @@ static int readdecesc (LexState *ls) {
     save_and_next(ls);
   }
   esccheck(ls, r <= UCHAR_MAX,
-              locale_get(ls->L, "diagnostics",
-                         "decimal·escape·too·large", "decimal escape too large"));
+              locale_get(ls->L, "diagnostics", "decimal·escape·too·large", "decimal·escape·too·large"));
   luaZ_buffremove(ls->buff, i);  /* remove read digits from buffer */
   return r;
 }
@@ -855,15 +839,11 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
   while (ls->current != del) {
     switch (ls->current) {
       case EOZ:
-        lexerror(ls, locale_get(ls->L, "diagnostics",
-                                       "unfinished·string",
-                                       "unfinished string"), TK_EOS);
+        lexerror(ls, locale_get(ls->L, "diagnostics", "unfinished·string", "unfinished·string"), TK_EOS);
         break;  /* to avoid warnings */
       case '\n':
       case '\r':
-        lexerror(ls, locale_get(ls->L, "diagnostics",
-                                       "unfinished·string",
-                                       "unfinished string"), TK_STRING);
+        lexerror(ls, locale_get(ls->L, "diagnostics", "unfinished·string", "unfinished·string"), TK_STRING);
         break;  /* to avoid warnings */
       case '\\': {  /* escape sequences */
         int c;  /* final character to be saved */
@@ -899,9 +879,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
               goto read_save;
             }
             esccheck(ls, lisdigit(ls->current),
-                        locale_get(ls->L, "diagnostics",
-                                   "invalid·escape·sequence",
-                                   "invalid escape sequence"));
+                        locale_get(ls->L, "diagnostics", "invalid·escape·sequence", "invalid·escape·sequence"));
             c = readdecesc(ls);  /* digital escape '\ddd' */
             goto only_save;
           }
@@ -932,15 +910,11 @@ static void read_string_utf8 (LexState *ls, const char *delim, size_t dlen,
   while (!current_matches_bytes(ls, delim, dlen)) {
     switch (ls->current) {
       case EOZ:
-        lexerror(ls, locale_get(ls->L, "diagnostics",
-                                       "unfinished·string",
-                                       "unfinished string"), TK_EOS);
+        lexerror(ls, locale_get(ls->L, "diagnostics", "unfinished·string", "unfinished·string"), TK_EOS);
         break;  /* to avoid warnings */
       case '\n':
       case '\r':
-        lexerror(ls, locale_get(ls->L, "diagnostics",
-                                       "unfinished·string",
-                                       "unfinished string"), TK_STRING);
+        lexerror(ls, locale_get(ls->L, "diagnostics", "unfinished·string", "unfinished·string"), TK_STRING);
         break;  /* to avoid warnings */
       case '\\': {  /* escape sequences */
         int c;  /* final character to be saved */
@@ -975,9 +949,7 @@ static void read_string_utf8 (LexState *ls, const char *delim, size_t dlen,
               goto read_save;
             }
             esccheck(ls, lisdigit(ls->current),
-                        locale_get(ls->L, "diagnostics",
-                                   "invalid·escape·sequence",
-                                   "invalid escape sequence"));
+                        locale_get(ls->L, "diagnostics", "invalid·escape·sequence", "invalid·escape·sequence"));
             c = readdecesc(ls);
             goto only_save;
           }
@@ -1103,8 +1075,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
     if (skip_decorative_layout_glyph(ls))
       continue;
     if (is_blocked_native_operator(ls))
-      lexerror(ls, locale_get(ls->L, "diagnostics",
-                              "unexpected·symbol", "unexpected symbol"),
+      lexerror(ls, locale_get(ls->L, "diagnostics", "unexpected·symbol", "unexpected·symbol"),
                ls->current);
     if (current_matches_bytes(ls, locale_string_delim, locale_string_delim_len) &&
         !(locale_string_delim_len == 1 &&
@@ -1156,9 +1127,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           return TK_STRING;
         }
         else if (sep == 0)  /* '[=...' missing second bracket? */
-          lexerror(ls, locale_get(ls->L, "diagnostics",
-                                         "invalid·long·string·delimiter",
-                                         "invalid long string delimiter"),
+          lexerror(ls, locale_get(ls->L, "diagnostics", "invalid·long·string·delimiter", "invalid·long·string·delimiter"),
                    TK_STRING);
         return '[';
       }
