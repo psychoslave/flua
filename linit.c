@@ -137,35 +137,21 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   }
   lua_assert((mask >> 1) == LUA_UTF8LIBK);
   lua_pop(L, 1);  /* remove PRELOAD table */
-    add_locale_function_aliases(L);  /* add localized function aliases */
+  add_locale_function_aliases(L);  /* add localized function aliases */
   
   /* Add localized library aliases by name (e.g., signovico = string, elugi = io) */
   lua_pushglobaltable(L);
   lua_getfield(L, -1, "string");
   if (!lua_isnil(L, -1)) {
-    lua_setfield(L, -2, "signovico");  /* _G.signovico = _G.string */
+   lua_setfield(L, -2, "signovico");  /* _G.signovico = _G.string */
   } else {
-    lua_pop(L, 1);
+   lua_pop(L, 1);
   }
   lua_getfield(L, -1, "io");
   if (!lua_isnil(L, -1)) {
-    lua_setfield(L, -2, "elugi");  /* _G.elugi = _G.io */
+   lua_setfield(L, -2, "elugi");  /* _G.elugi = _G.io */
   } else {
-    lua_pop(L, 1);
+   lua_pop(L, 1);
   }
-  
-  /* Load localized wrapper modules (e.g., locale.esperanto.dromo for os) */
-  lua_getfield(L, -1, "require");
-  if (!lua_isnil(L, -1)) {
-    lua_pushstring(L, "locale.esperanto.dromo");
-    if (lua_pcall(L, 1, 1, 0) == LUA_OK && !lua_isnil(L, -1)) {
-      lua_setfield(L, -2, "dromo");  /* _G.dromo = require "locale.esperanto.dromo" */
-    } else {
-      lua_pop(L, 1);
-    }
-  } else {
-    lua_pop(L, 1);
-  }
-  
   lua_pop(L, 1);  /* pop _G */
 }
