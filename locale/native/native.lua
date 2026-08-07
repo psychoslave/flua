@@ -108,7 +108,7 @@ locale = {
       "  -l g=mod  require library 'mod' into global 'g'\n" ..
       "  -v        show version information\n" ..
       "  -E        ignore environment variables\n" ..
-      "  -P        plain locale mode (no native fallback aliases)\n" ..
+      "  -P        plain locale mode (no default fallback aliases)\n" ..
       "  -W        turn warnings on\n" ..
       "  --        stop handling options\n" ..
       "  -         stop handling options and execute stdin\n",
