@@ -76,6 +76,40 @@ make 'symbolic·transpraxis'
 Each is equivalent to `make locale-build LUA_KERNEL_LOCALE=<that-locale>`.
 They reuse the same host-aware defaults as plain `make`.
 
+### Kernel Locales: Rationale and Trade-offs
+
+A **kernel locale** is the compile-time default baked into the interpreter's bootstrap. It affects:
+- Lexer token names in error diagnostics (e.g., `syntax error near 'xyz'` vs `eraro ĉe ...`)
+- Interactive prompt labels and REPL messages
+- Initial locale fallback when `LUA_LOCALE` is not set
+- The locale loaded at startup to initialize keyword/operator/diagnostic mappings
+
+**Pros of kernel locales:**
+- Diagnose syntax errors in the native language without relying on runtime locale loading
+- Smaller startup overhead (locale names/keywords already in binary)
+- Consistent experience for interactive REPL users in that language
+- Useful for embedded use (single-locale deployments)
+
+**Cons of kernel locales:**
+- Requires recompilation to change default language
+- Larger binary (kernel locale header is ~5KB per locale)
+- Less flexibility than pure runtime locales
+
+**Runtime locale fallback:**
+If the kernel locale fails to load at startup (e.g., missing `locale/<kernel>/` directory), the interpreter falls back to the base English kernel and attempts to load the locale file specified by `LUA_LOCALE` environment variable or the hardcoded default.
+
+#### Incremental Rebuild Optimization
+
+When switching between kernel locales (`make native`, `make esperanto`, etc.), the build system tracks the active kernel locale in `.last-kernel-locale`. This stamp file enables incremental builds:
+
+- **First build** (`make esperanto`): Full recompile, writes `esperanto` to `.last-kernel-locale`
+- **Repeated build with same locale** (`make esperanto` again): Zero recompilation (stamp matches, source unchanged)
+- **Locale switch** (`make native`): Detects stamp mismatch, runs `make clean`, recompiles, updates stamp
+
+This avoids the overhead of forced full rebuilds when running locale-specific test sweeps (e.g., `for l in native esperanto symbolic·transpraxis; do make $l && ./lua ...; done`).
+
+**Note:** `.last-kernel-locale` is automatically generated and should not be committed (see `.gitignore`).
+
 Quick end-to-end validation (from repository root):
 
 ```sh

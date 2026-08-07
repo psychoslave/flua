@@ -416,6 +416,4 @@ locale = {
     ["os·library·identifier"] = "os",
     ["os·exit·method"] = "exit",
   },
-
-  ["identifier·aliases"] = {},
 }

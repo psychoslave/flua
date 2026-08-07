@@ -202,27 +202,6 @@ static void add_identifier_alias_pair (const char *alias,
   }
 }
 
-/*
-** Locale-provided runtime identifier aliases: table mapping alias -> canonical
-** (for example: ["🎯"] = "assert", ["🌐"] = "_G").
-*/
-static void add_locale_identifier_aliases (lua_State *L) {
-  int top = lua_gettop(L);
-  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
-      lua_getfield(L, -1, "identifier·aliases") == LUA_TTABLE) {
-    lua_pushnil(L);
-    while (lua_next(L, -2) != 0) {
-      if (lua_type(L, -2) == LUA_TSTRING && lua_type(L, -1) == LUA_TSTRING) {
-        const char *alias = lua_tostring(L, -2);
-        const char *canonical = lua_tostring(L, -1);
-        if (alias != NULL && canonical != NULL)
-          add_identifier_alias_pair(alias, canonical);
-      }
-      lua_pop(L, 1);
-    }
-  }
-  lua_settop(L, top);
-}
 
 static void add_ignored_layout_glyph (const char *bytes) {
   int i;
@@ -352,7 +331,6 @@ void luaX_setlocale (lua_State *L) {
   if (locale_string_delim_alt[0] == '\0')
     locale_string_delim_alt = LUA_KERNEL_DELIM_DEFAULT_STRING_DELIMITER_ALTERNATE;
   locale_string_delim_alt_len = strlen(locale_string_delim_alt);
-  add_locale_identifier_aliases(L);
   add_locale_ignored_layout_glyphs(L);
   for (i = 0; i < NUM_RESERVED; i++)
     add_locale_keyword_symbol(L, kernel_keyword_keys[i], "",

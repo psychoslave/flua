@@ -230,8 +230,4 @@ locale = {
     ["os·library·identifier"] = "dromo",
     ["os·exit·method"] = "exit",
   },
-
-  ["identifier·aliases"] = {
-    ["dromo"] = "os",
-  },
 }
