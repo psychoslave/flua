@@ -791,6 +791,7 @@ static void checklocal (lua_State *L, const char *line) {
 static int multiline (lua_State *L) {
   size_t len;
   const char *line = lua_tolstring(L, 1, &len);  /* get first line */
+  const char *retline = NULL;
   const char *name = locale_get(L, "repl",
                                 "interactive·source·identity", "interactive·source·identity");
   checklocal(L, line);
@@ -800,7 +801,7 @@ static int multiline (lua_State *L) {
     int expr_incomplete = 0;
     int exprstatus = LUA_OK;
     if (!stmt_incomplete && status != LUA_OK) {
-      const char *retline = lua_pushfstring(L, "return %s", line);
+      retline = lua_pushfstring(L, "return %s", line);
       exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
       expr_incomplete = incomplete(L, exprstatus);
       lua_pop(L, 2);  /* remove expression result and generated "return" line */
@@ -808,7 +809,7 @@ static int multiline (lua_State *L) {
     if (!(stmt_incomplete || expr_incomplete) || !pushline(L, 0)) {
       if (expr_incomplete && !stmt_incomplete && status != LUA_OK) {
         lua_pop(L, 1);  /* remove statement error */
-        const char *retline = lua_pushfstring(L, "return %s;", line);
+        retline = lua_pushfstring(L, "return %s;", line);
         exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
         lua_remove(L, -2);  /* remove generated "return" line */
         return exprstatus;  /* report expression-side incomplete error */
