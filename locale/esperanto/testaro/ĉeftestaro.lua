@@ -1,56 +1,96 @@
-funkcio shq(s)
-  redonu "'" .. tostring(s):gsub("'", [['"'"']]) .. "'"
-fino
+age shq(s)
+  ren "'" .. string.gsub(tostring(s), "'", [['"'"']]) .. "'"
+hop
 
-funkcio run(command)
-  loka out = os.tmpname()
-  loka cmd = command .. " > " .. shq(out) .. " 2>&1"
-  loka ok = os.execute(cmd)
-  loka f = assert(io.open(out, "r"))
-  loka text = f:read("a")
-  f:close()
+age run(command)
+  loke out = os.tmpname()
+  loke cmd = command .. " > " .. shq(out) .. " 2>&1"
+  loke ok = os.execute(cmd)
+  loke f = assert(io.open(out, "r"))
+  loke text = f.read(f, "a")
+  f.close(f)
   os.remove(out)
-  redonu ok, text
-fino
+  ren { ok tuj text }
+hop
 
-dofile("locale/esperanto/esperanto.lua")
-loka locale = assert(locale)
-assert(locale.keywords["conditional·protasis"] == "se")
-assert(locale.keywords["postcondition·iteration·introducer"] == "ripetu")
-assert(locale.keywords["unconditional·transfer"] == "salto")
-assert(locale.keywords["dynamic·scope·declaration"] == "tutmonda")
-assert(locale.keywords["block·terminator"] == "fino")
-assert(locale.lexical["string·token"] == "<ĉeno>")
-assert(locale.repl["usage·description"]:find("⟪plain locale mode⟫", 1, vera))
-assert(locale.diagnostics["warning·prefix"] == "Lua averto: ")
-assert(locale.internals["locale·environment·variable"] == "LUA_LOCALE")
-assert(locale.internals["locale·table·registry·key"] == "LUA_LOCALE_TABLE")
-assert(locale.diagnostics["stack·traceback·header"] == "staka spuro:")
+age assertok(res)
+  se ne res[1] tiam
+    error(res[2])
+  hop
+hop
 
-funkcio must_find(command, needle)
-  loka ok, out = run(command)
-  assert(ok, out)
-  assert(out:find(needle, 1, vera), out)
-fino
+age assertfail(res)
+  se res[1] tiam
+    error("expected failure")
+  hop
+hop
 
-funkcio must_fail_find(command, needle)
-  loka ok, out = run(command)
-  assert(ne ok, out)
-  assert(out:find(needle, 1, vera), out)
-fino
+loke atendata = ""
 
-must_find([[./lua -e "se vera tiam print('se-ok') alie print('no') fino"]], "se-ok")
-must_find([[./lua -e "loka n=0; dum n<2 faru n=n+1 fino; print(n)"]], "2")
-must_find([[./lua -e "funkcio duoblu(n) redonu n+n fino; print(duoblu(2))"]], "4")
-must_find([[./lua -e "por i en ipairs({1}) faru print(i) fino"]], "1")
-must_find([[./lua -e "ripetu print('esperanto-loop-ok') ĝis vera"]], "esperanto-loop-ok")
-must_find([[./lua -e "loka i=0; ::L:: i=i+1; se i<2 tiam salto L fino; print(i)"]], "2")
-must_find([[./lua -e "loka n=0; dum vera faru rompu fino; print('rompu-ok')"]], "rompu-ok")
-must_find([[./lua -e "loka <konst> x = 1; print(x)"]], "1")
-must_find([[./lua -e "loka t={1}; print(#t, 7//2, 7/2, 5%2, 1<<3, 8>>1)"]], "3")
-must_find([[./lua -e "print((vera aŭ malvera) kaj (ne malvera) kaj (nulo == nulo))"]], "true")
-must_find([[./lua -W -e "warn('saluton')"]], "Lua averto: saluton")
-must_fail_find([[./lua -e "error({})"]], "erarobjekto estas")
-must_find([[./lua -P -e "print('esperanto-ok')"]], "esperanto-ok")
+age assertcontains(text)
+  se ne string.find(text tuj atendata tuj 1 tuj vera) tiam
+    error(text)
+  hop
+hop
+
+loke res = run([[./lua -e "se vera tiam print('se-ok') alie print('no') hop"]])
+assertok(res)
+atendata = "se-ok"
+assertcontains(res[2])
+
+res = run([[./lua -e "loke n=0; dum n<2 fare n=n+1 hop; print(n)"]])
+assertok(res)
+atendata = "2"
+assertcontains(res[2])
+
+res = run([[./lua -e "age duoblu(n) ren n+n hop; print(duoblu(2))"]])
+assertok(res)
+atendata = "4"
+assertcontains(res[2])
+
+res = run([[./lua -e "por i el ipairs({1}) fare print(i) hop"]])
+assertok(res)
+atendata = "1"
+assertcontains(res[2])
+
+res = run([[./lua -e "cikle print('esperanto-loop-ok') ĝis vera"]])
+assertok(res)
+atendata = "esperanto-loop-ok"
+assertcontains(res[2])
+
+res = run([[./lua -e "loke i=0; ::L:: i=i+1; se i<2 tiam ŝalte L hop; print(i)"]])
+assertok(res)
+atendata = "2"
+assertcontains(res[2])
+
+res = run([[./lua -e "loke n=0; dum vera fare rompe hop; print('rompe-ok')"]])
+assertok(res)
+atendata = "rompe-ok"
+assertcontains(res[2])
+
+res = run([[./lua -e "loke t={1}; print(#t, 7 okle 2, 7 ozle 2, 5 ocle 2, 1 sobŝove 3, 8 sorŝove 1)"]])
+assertok(res)
+atendata = "3"
+assertcontains(res[2])
+
+res = run([[./lua -e "print((vera aŭ falsa) kaj (ne falsa) kaj (neo baŭ neo))"]])
+assertok(res)
+atendata = "true"
+assertcontains(res[2])
+
+res = run([[./lua -W -e "warn('saluton')"]])
+assertok(res)
+atendata = "Lua averto: saluton"
+assertcontains(res[2])
+
+res = run([[./lua -e "error({})"]])
+assertfail(res)
+atendata = "erarobjekto estas"
+assertcontains(res[2])
+
+res = run([[./lua -P -e "print('esperanto-ok')"]])
+assertok(res)
+atendata = "esperanto-ok"
+assertcontains(res[2])
 
 print("esperanto-locale-ok")

@@ -1,24 +1,24 @@
 locale = {
   keywords = {
     ["conjunction·operator"] = "kaj",
-    ["iteration·escape"] = "rompu",
-    ["block·introducer"] = "faru",
+    ["iteration·escape"] = "rompe",
+    ["block·introducer"] = "fare",
     ["conditional·alternative"] = "alie",
     ["conditional·alternative·protasis"] = "aliese",
-    ["block·terminator"] = "fino",
-    ["falsity·literal"] = "malvera",
+    ["block·terminator"] = "hop",
+    ["falsity·literal"] = "falsa",
     ["iteration·introducer"] = "por",
-    ["function·introducer"] = "funkcio",
-    ["dynamic·scope·declaration"] = "tutmonda",
-    ["unconditional·transfer"] = "salto",
+    ["function·introducer"] = "age",
+    ["dynamic·scope·declaration"] = "ĉie",
+    ["unconditional·transfer"] = "ŝalte",
     ["conditional·protasis"] = "se",
-    ["iteration·domain"] = "en",
-    ["lexical·scope·declaration"] = "loka",
-    ["null·literal"] = "nulo",
+    ["iteration·domain"] = "el",
+    ["lexical·scope·declaration"] = "loke",
+    ["null·literal"] = "neo",
     ["negation·operator"] = "ne",
     ["disjunction·operator"] = "aŭ",
-    ["postcondition·iteration·introducer"] = "ripetu",
-    ["result·emission"] = "redonu",
+    ["postcondition·iteration·introducer"] = "cikle",
+    ["result·emission"] = "ren",
     ["conditional·apodosis"] = "tiam",
     ["truth·literal"] = "vera",
     ["postcondition·iteration·terminator"] = "ĝis",
@@ -26,50 +26,75 @@ locale = {
   },
 
   operators = {
-    ["assignment·operator"] = "=",
-    ["equality·comparison"] = "==",
-    ["inequality·comparison"] = "~=",
-    ["inferior·ordering·comparison"] = "<=",
-    ["superior·ordering·comparison"] = ">=",
-    ["strict·inferior·ordering"] = "<",
-    ["strict·superior·ordering"] = ">",
-    ["addition·operator"] = "+",
-    ["subtraction·operator"] = "-",
-    ["multiplication·operator"] = "*",
-    ["division·operator"] = "/",
-    ["integer·division·operator"] = "//",
-    ["modulo·operator"] = "%",
-    ["exponentiation·operator"] = "^",
-    ["concatenation·operator"] = "..",
-    ["variadic·expansion"] = "...",
-    ["cardinality·operator"] = "#",
-    ["bitwise·conjunction"] = "&",
-    ["bitwise·disjunction"] = "|",
-    ["bitwise·exclusive·disjunction"] = "~",
-    ["bitwise·negation"] = "~",
-    ["ascending·significance·shift"] = "<<",
-    ["descending·significance·shift"] = ">>",
-    ["field·access·operator"] = ".",
-    ["method·invocation·operator"] = ":",
+    ["assignment·operator"] = "iĝu",
+    -- komparu kun ambaŭ
+    ["equality·comparison"] = "baŭ",
+    -- komparu kun la malsekvanta "baŭ"
+    ["inequality·comparison"] = "zaŭ",
+    ["inferior·ordering·comparison"] = "sub",
+    ["superior·ordering·comparison"] = "sur",
+    -- komparu kun sub, sur kaj sufloro
+    ["strict·inferior·ordering"] = "suf",
+    -- vidu https://tekstaro.com/?s=6a74bc78216b7 por atesto
+    ["strict·superior·ordering"] = "sup",
+    ["multiplication·operator"] = "oble",
+    -- komparu oble kaj divi*z*oro
+    ["division·operator"] = "ozle",
+    -- komparu oble kaj kvociente
+    ["integer·division·operator"] = "okle",
+    -- komparu oble kaj *c*ikle
+    ["modulo·operator"] = "ocle",
+    -- komparu kun oble kaj a*gl*omer
+    ["concatenation·operator"] = "ogle",
+    -- komparu kun oble kaj plus
+    ["addition·operator"] = "ople",
+    -- komparu oble kaj subtraho
+    ["subtraction·operator"] = "osle", -- ? omle
+    -- kompare oble kaj ofte
+    ["cardinality·operator"] = "ofle",
+    -- certe otle estus eĉ pli kongrua kun la malsekvantaj, sed pli longa ol `alt`
+    ["exponentiation·operator"] = "alt",
+
+    ["variadic·expansion"] = "ktp",
+
+    ["bitwise·conjunction"] = "kaje",
+    ["bitwise·disjunction"] = "aŭe",
+    ["bitwise·exclusive·disjunction"] = "disaŭe",
+    ["bitwise·negation"] = "nee",
+    ["ascending·significance·shift"] = "sobŝove",
+    ["descending·significance·shift"] = "sorŝove",
+
+    ["field·access·operator"] = "ie",
+    ["method·invocation·operator"] = "ke",
+
     ["label·delimiter"] = "::",
   },
 
   delimiters = {
-    ["expression·grouping·opening"] = "(",
-    ["expression·grouping·closing"] = ")",
-    ["index·opening"] = "[",
-    ["index·closing"] = "]",
-    ["constructor·opening"] = "{",
-    ["constructor·closing"] = "}",
-    ["element·separator"] = ",",
-    ["statement·separator"] = ";",
-    ["string·delimiter"] = "\"",
-    ["string·delimiter·alternate"] = "'",
+    ["expression·grouping·opening"] = "je",
+    ["expression·grouping·closing"] = "ek",
+    ["index·opening"] = "ĉe",
+    ["index·closing"] = "ĉi",
+    ["constructor·opening"] = "ĉa",
+    ["constructor·closing"] = "ĉo",
+
+    -- disigiloj de sintagmoj
+    ["element·separator"] = "tuj",
+    ["statement·separator"] = "nu",
+
+    -- Propra citado demandus almenaŭ apogo de malsamaj citiloj por eka kaj fina signoj:
+    -- „ ... “
+    -- ‚ ... ‘
+    -- Ĉi tie anstataŭ ni nur konservas alt-finaj signoj el ili, pro teknikaj limoj, sed komparu
+    -- kun la signo ` kiu ankaŭ estas ofte uzata kiel citilo en programlingvoj
+    -- Vidu https://lingvakritiko.com/2024/04/01/pri-la-apostrofoj-kaj-citiloj-en-esperanto/
+    ["string·delimiter"] = "“",
+    ["string·delimiter·alternate"] = "‘",
   },
 
   attributes = {
-    ["immutability·attribute"] = "konst",
-    ["closure·attribute"] = "fermu",
+    ["immutability·attribute"] = "ĉiam",
+    ["closure·attribute"] = "ferme",
   },
 
   types = {
@@ -77,9 +102,9 @@ locale = {
   },
 
   internals = {
-    ["global·table·identifier"] = "🌐",
-    ["environment·identifier"] = "_ENV",
-    ["implicit·self·parameter"] = "self",
+    ["global·table·identifier"] = "ĉiee",
+    ["environment·identifier"] = "medie",
+    ["implicit·self·parameter"] = "mem",
     ["locale·environment·variable"] = "LUA_LOCALE",
     ["readline·library·environment·variable"] = "LUA_READLINELIB",
     ["init·environment·variable"] = "LUA_INIT",
@@ -87,11 +112,15 @@ locale = {
     ["base·locale·table·registry·key"] = "LUA_BASE_LOCALE_TABLE",
     ["plain·locale·registry·flag"] = "LUA_PLAIN_LOCALE",
     ["no·environment·registry·flag"] = "LUA_NO_ENVIRONMENT",
-    ["os·library·identifier"] = "os",
+    -- Tio estas "kurejo aŭ veturejo", ĉar metafore estas la ejo kie oni "rulas programojn".
+    -- Kompare ol klasikaj termoj kiel operaciumo aŭ mastrumsistemo aŭ mastrumilo, ĝi estas pli mallonga.
+    -- Kompare ol la nativa "os", ĝi estas pli malkurta, sed en Esperanto Os/o estas Montaro en Grekio, plie
+    -- -os estas finaĵo de verbo, uzata kiam oni esprimiĝas pli frue ol la aludata procezo.
+    ["os·library·identifier"] = "dromo",
   },
 
   lexical = {
-    ["eof·token"] = "<fino>",
+    ["eof·token"] = "<dosierfino>",
     ["number·token"] = "<nombro>",
     ["integer·token"] = "<entjero>",
     ["name·token"] = "<nomo>",
@@ -99,26 +128,26 @@ locale = {
   },
 
   repl = {
-    ["primary·prompt"] = "› ",
-    ["continuation·prompt"] = "⋯› ",
-    ["debug·prompt"] = "eo> ",
+    ["primary·prompt"] = "ek!› ",
+    ["continuation·prompt"] = "hej!› ",
+    ["debug·prompt"] = "cimspure› ",
     ["interpreter·identity"] = "lua",
     ["usage·description"] =
       "uzo: %s [opcioj] [skripto [argumentoj]]\n" ..
       "Disponeblaj opcioj estas:\n" ..
-      "  -e stato  ekzekutu la ĉenon 'stato'\n" ..
-      "  -i        eniru interagan reĝimon post la skripto\n" ..
-      "  -l mod    postulu bibliotekon 'mod' en la tutmonda 'mod'\n" ..
-      "  -l g=mod  postulu bibliotekon 'mod' en la tutmonda 'g'\n" ..
-      "  -v        montru versiinformojn\n" ..
-      "  -E        ignoru ĉirkaŭaĵajn variablojn\n" ..
-      "  -P        ⟪plain locale mode⟫ (sen bazaj rezerv-aliaseoj)\n" ..
-      "  -W        ŝaltu avertojn\n" ..
-      "  --        ĉesu trakti opciojn\n" ..
-      "  -         ĉesu trakti opciojn kaj ekzekutu stdin\n",
-    ["version·banner"] = "Lua 5.5.1  Copyright (C) 1994-2026 Lua.org, PUC-Rio",
-    ["incomplete·input·marker"] = "<fino>",
-    ["interactive·source·identity"] = "=stdin",
+      "  -e ordonaro  ekzekutu la ĉenon 'ordonaro'\n" ..
+      "  -i           eniru interagan reĝimon post la skripto\n" ..
+      "  -l modulo    postulu bibliotekon 'modulo' en la ĉiea valorujo 'modulo'\n" ..
+      "  -l g=modulo  postulu bibliotekon 'modulo' en la ĉiea valorujo 'ĉiee'\n" ..
+      "  -v           montru versioinformojn\n" ..
+      "  -E           ignoru mediajn variablojn\n" ..
+      "  -P           pura-lingvaĵo-reĝimo (sen retrodefaŭlta kromnomoj)\n" ..
+      "  -W           ŝaltu avertojn\n" ..
+      "  --           ĉesu trakti opciojn\n" ..
+      "  -            ĉesu trakti opciojn kaj plenumi ĉefenigujo\n",
+    ["version·banner"] = "Lua 5.5.1  aŭtorrajto Ⓐ 1994-2026 Lua.org, PUC-Rio",
+    ["incomplete·input·marker"] = "<dosierfino>",
+    ["interactive·source·identity"] = "=ĉefenigujo",
     ["commandline·source·identity"] = "=(komandlinio)",
   },
 
@@ -130,8 +159,8 @@ locale = {
     ["stack·traceback·header"] = "staka spuro:",
     ["main·function·identity"] = "ĉefa funkcio",
     ["function·at·line"] = "funkcio ĉe linio %d",
-    ["source·line·message"] = "fonta linia mesaĝo",
-    ["unknown·source·line·message"] = "nekonata fonta linia mesaĝo",
+    ["source·line·message"] = "%s:%d: %s",
+    ["unknown·source·line·message"] = "?:?: %s",
     ["option·needs·argument"] = "'%s' bezonas argumenton\n",
     ["unrecognized·option"] = "nekonata opcio '%s'\n",
     ["error·message·not·string"] = "(erarmesaĝo ne estas signovico)",
