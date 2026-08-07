@@ -804,7 +804,10 @@ static int multiline (lua_State *L) {
       retline = lua_pushfstring(L, "return %s", line);
       exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
       expr_incomplete = incomplete(L, exprstatus);
-      lua_pop(L, 2);  /* remove expression result and generated "return" line */
+      lua_pop(L, 2);  /* remove wrapped expression result and generated "return" line */
+      if (exprstatus == LUA_OK) {
+        status = LUA_OK;  /* signal that wrapping succeeded */
+      }
     }
     if (!(stmt_incomplete || expr_incomplete) || !pushline(L, 0)) {
       if (expr_incomplete && !stmt_incomplete && status != LUA_OK) {
