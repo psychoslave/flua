@@ -758,7 +758,8 @@ static int pushline (lua_State *L, int firstline) {
 */
 static int addreturn (lua_State *L) {
   const char *line = lua_tostring(L, -1);  /* original line */
-  const char *retline = lua_pushfstring(L, "return %s", line);
+  const char *rtkw = locale_get(L, "keywords", "result·emission", "return");
+  const char *retline = lua_pushfstring(L, "%s %s", rtkw, line);
   const char *name = locale_get(L, "repl",
                                 "interactive·source·identity", "interactive·source·identity");
   int status = luaL_loadbufferx(L, retline, strlen(retline), name, "t");
@@ -792,6 +793,7 @@ static int multiline (lua_State *L) {
   size_t len;
   const char *line = lua_tolstring(L, 1, &len);  /* get first line */
   const char *retline = NULL;
+  const char *rtkw = locale_get(L, "keywords", "result·emission", "return");
   const char *name = locale_get(L, "repl",
                                 "interactive·source·identity", "interactive·source·identity");
   checklocal(L, line);
@@ -801,18 +803,23 @@ static int multiline (lua_State *L) {
     int expr_incomplete = 0;
     int exprstatus = LUA_OK;
     if (!stmt_incomplete && status != LUA_OK) {
-      retline = lua_pushfstring(L, "return %s", line);
+      retline = lua_pushfstring(L, "%s %s", rtkw, line);
       exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
       expr_incomplete = incomplete(L, exprstatus);
-      lua_pop(L, 2);  /* remove wrapped expression result and generated "return" line */
       if (exprstatus == LUA_OK) {
-        status = LUA_OK;  /* signal that wrapping succeeded */
+        /* wrapped expression succeeded; keep compiled chunk, remove statement error and return string */
+        lua_remove(L, -3);  /* remove statement error */
+        lua_remove(L, -2);  /* remove "return" string */
+        status = LUA_OK;
+      } else {
+        /* wrapped expression failed; pop both wrapped attempt and its error */
+        lua_pop(L, 2);
       }
     }
     if (!(stmt_incomplete || expr_incomplete) || !pushline(L, 0)) {
       if (expr_incomplete && !stmt_incomplete && status != LUA_OK) {
         lua_pop(L, 1);  /* remove statement error */
-        retline = lua_pushfstring(L, "return %s;", line);
+        retline = lua_pushfstring(L, "%s %s;", rtkw, line);
         exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
         lua_remove(L, -2);  /* remove generated "return" line */
         return exprstatus;  /* report expression-side incomplete error */
