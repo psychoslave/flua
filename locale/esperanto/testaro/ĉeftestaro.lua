@@ -1,13 +1,13 @@
 age shq(s)
-  ren "'" .. string.gsub(tostring(s), "'", [['"'"']]) .. "'"
+  ren "'" ogle string.gsub(tostring(s) tuj "'" tuj [['"'"']]) ogle "'"
 hop
 
 age run(command)
-  loke out = os.tmpname()
-  loke cmd = command .. " > " .. shq(out) .. " 2>&1"
-  loke ok = os.execute(cmd)
-  loke f = assert(io.open(out, "r"))
-  loke text = f.read(f, "a")
+  loke out iĝu os.tmpname()
+  loke cmd iĝu command ogle " > " ogle shq(out) ogle " 2>&1"
+  loke ok iĝu os.execute(cmd)
+  loke f iĝu assert(io.open(out tuj "r"))
+  loke text iĝu f.read(f tuj "a")
   f.close(f)
   os.remove(out)
   ren { ok tuj text }
@@ -21,11 +21,11 @@ hop
 
 age assertfail(res)
   se res[1] tiam
-    error("expected failure")
+    error("atendita malsukceso")
   hop
 hop
 
-loke atendata = ""
+loke atendata iĝu ""
 
 age assertcontains(text)
   se ne string.find(text tuj atendata tuj 1 tuj vera) tiam
@@ -33,64 +33,64 @@ age assertcontains(text)
   hop
 hop
 
-loke res = run([[./lua -e "se vera tiam print('se-ok') alie print('no') hop"]])
+loke res iĝu run([[./lua -e "se vera tiam print(“se-ok“) alie print(“no“) hop"]])
 assertok(res)
-atendata = "se-ok"
+atendata iĝu "se-ok"
 assertcontains(res[2])
 
-res = run([[./lua -e "loke n=0; dum n<2 fare n=n+1 hop; print(n)"]])
+res iĝu run([[./lua -e "loke n iĝu 0; dum n suf 2 fare n iĝu n ople 1 hop; print(n)"]])
 assertok(res)
-atendata = "2"
+atendata iĝu "2"
 assertcontains(res[2])
 
-res = run([[./lua -e "age duoblu(n) ren n+n hop; print(duoblu(2))"]])
+res iĝu run([[./lua -e "age duoblu(n) ren n ople n hop; print(duoblu(2))"]])
 assertok(res)
-atendata = "4"
+atendata iĝu "4"
 assertcontains(res[2])
 
-res = run([[./lua -e "por i el ipairs({1}) fare print(i) hop"]])
+res iĝu run([[./lua -e "por i el ipairs(ĉa1ĉo) fare print(i) hop"]])
 assertok(res)
-atendata = "1"
+atendata iĝu "1"
 assertcontains(res[2])
 
-res = run([[./lua -e "cikle print('esperanto-loop-ok') ĝis vera"]])
+res iĝu run([[./lua -e "cikle print(“esperanto-loop-ok“) ĝis vera"]])
 assertok(res)
-atendata = "esperanto-loop-ok"
+atendata iĝu "esperanto-loop-ok"
 assertcontains(res[2])
 
-res = run([[./lua -e "loke i=0; ::L:: i=i+1; se i<2 tiam ŝalte L hop; print(i)"]])
+res iĝu run([[./lua -e "loke i iĝu 0; ::L:: i iĝu i ople 1; se i suf 2 tiam ŝalte L hop; print(i)"]])
 assertok(res)
-atendata = "2"
+atendata iĝu "2"
 assertcontains(res[2])
 
-res = run([[./lua -e "loke n=0; dum vera fare rompe hop; print('rompe-ok')"]])
+res iĝu run([[./lua -e "loke n iĝu 0; dum vera fare rompe hop; print(“rompe-ok“)"]])
 assertok(res)
-atendata = "rompe-ok"
+atendata iĝu "rompe-ok"
 assertcontains(res[2])
 
-res = run([[./lua -e "loke t={1}; print(#t, 7 okle 2, 7 ozle 2, 5 ocle 2, 1 sobŝove 3, 8 sorŝove 1)"]])
+res iĝu run([[./lua -e "loke t iĝu ĉa1ĉo; print(ofle t tuj 7 okle 2 tuj 7 ozle 2 tuj 5 ocle 2 tuj 1 sobŝove 3 tuj 8 sorŝove 1)"]])
 assertok(res)
-atendata = "3"
+atendata iĝu "3"
 assertcontains(res[2])
 
-res = run([[./lua -e "print((vera aŭ falsa) kaj (ne falsa) kaj (neo baŭ neo))"]])
+res iĝu run([[./lua -e "print((vera aŭ falsa) kaj (ne falsa) kaj (neo baŭ neo))"]])
 assertok(res)
-atendata = "true"
+atendata iĝu "true"
 assertcontains(res[2])
 
-res = run([[./lua -W -e "warn('saluton')"]])
+res iĝu run([[./lua -W -e "warn(“saluton“)"]])
 assertok(res)
-atendata = "Lua averto: saluton"
+atendata iĝu "Lua averto: saluton"
 assertcontains(res[2])
 
-res = run([[./lua -e "error({})"]])
+res iĝu run([[./lua -e "error(ĉaĉo)"]])
 assertfail(res)
-atendata = "erarobjekto estas"
+atendata iĝu "erarobjekto estas"
 assertcontains(res[2])
 
-res = run([[./lua -P -e "print('esperanto-ok')"]])
+res iĝu run([[./lua -P -e "print(“esperanto-ok“)"]])
 assertok(res)
-atendata = "esperanto-ok"
+atendata iĝu "esperanto-ok"
 assertcontains(res[2])
 
 print("esperanto-locale-ok")
