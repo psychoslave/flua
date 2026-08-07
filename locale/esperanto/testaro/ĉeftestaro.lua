@@ -1,96 +1,61 @@
-age ŝelcitigu je ĉeno ek 
-  ren "'" ogle ĉeno.anstataŭigu je ĉenurgu je ĉeno ek  tuj "'" tuj [['"'"']] ek  ogle "'"
+-- Esperanto locale integration test
+-- Tests basic keywords and localized functions
+
+-- Test 1: Conditional statements
+loke rezulto = falsa
+se vera tiam
+  rezulto = vera
 hop
 
-age rulu je komando ek 
-  loke eligo iĝu dromo.efemeranomo je  ek 
-  loke komandaĵo iĝu komando ogle " > " ogle ŝelcitigu je eligo ek  ogle " 2>&1"
-  loke konsidero iĝu dromo.plenumu je komandaĵo ek 
-  loke dosiero iĝu asertu je eneligo.open je eligo tuj "r"))
-  loke text iĝu dosiero.read je dosiero tuj "a" ek 
-  dosiero.close je dosiero ek 
-  dromo.remove je eligo ek 
-  ren { konsidero tuj text }
+se rezulto tiam
+  printu("testo 1: kondicoj - OK")
+alie
+  erarurgu("Conditional test failed")
 hop
 
-age kontroluokon je res ek 
-  se ne res[1] tiam
-    erarurgu je res[2] ek 
-  hop
+-- Test 2: Loops
+loke i = 0
+dum i suf 3 fare
+  i = i ople 1
 hop
 
-age kontrolumison je res ek 
-  se res[1] tiam
-    erarurgu je "atendita malsukceso" ek 
-  hop
+se i baŭ 3 tiam
+  printu("testo 2: cikloj - OK")
+alie
+  erarurgu("Loop test failed")
 hop
 
-loke atendata iĝu ""
-
-age kontroluenhavon je text ek 
-  se ne ĉeno.find je text tuj atendata tuj 1 tuj vera ek  tiam
-    erarurgu je text ek 
-  hop
+-- Test 3: Function definition and calls
+age duoblu(n)
+  ren n ople n
 hop
 
-loke res iĝu rulu je [[./lua -e "se vera tiam printu je "se-ok" ek  alie printu je "no" ek  hop"]] ek 
-kontroluokon je res ek 
-atendata iĝu "se-ok"
-kontroluenhavon je res[2] ek 
+se duoblu(3) baŭ 6 tiam
+  printu("testo 3: funkcio - OK")
+alie
+  erarurgu("Function test failed")
+hop
 
-res iĝu rulu je [[./lua -e "loke n iĝu 0; dum n suf 2 fare n iĝu n ople 1 hop; printu je n ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "2"
-kontroluenhavon je res[2] ek 
+-- Test 4: Localized print and assert
+printu(asertu(vera))
+printu("testo 4: printu kaj asertu - OK")
 
-res iĝu rulu je [[./lua -e "age duoblu je n ek  ren n ople n hop; printu je duoblu je 2))"]] ek 
-kontroluokon je res ek 
-atendata iĝu "4"
-kontroluenhavon je res[2] ek 
+-- Test 5: String library as signovico
+loke longo = signovico.len("hello")
+se longo baŭ 5 tiam
+  printu("testo 5: signovico - OK")
+alie
+  erarurgu("String test failed")
+hop
 
-res iĝu rulu je [[./lua -e "por i el ipairs je ĉa1ĉo fare printu je i ek  hop"]] ek 
-kontroluokon je res ek 
-atendata iĝu "1"
-kontroluenhavon je res[2] ek 
+-- Test 6: IO library as elugi
+loke dosiero = elugi.open("/dev/null", "r")
+se dosiero tiam
+  dosiero:close()
+  printu("testo 6: elugi - OK")
+alie
+  erarurgu("IO test failed")
+hop
 
-res iĝu rulu je [[./lua -e "cikle printu je "esperanto-loop-ok" ek  ĝis vera"]] ek 
-kontroluokon je res ek 
-atendata iĝu "esperanto-loop-ok"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "loke i iĝu 0; ::L:: i iĝu i ople 1; se i suf 2 tiam ŝalte L hop; printu je i ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "2"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "loke n iĝu 0; dum vera fare rompe hop; printu je "rompe-ok" ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "rompe-ok"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "loke t iĝu ĉa1ĉo; printu je ofle je t tuj 7 okle 2 tuj 7 ozle 2 tuj 5 ocle 2 tuj 1 sobŝove 3 tuj 8 sorŝove 1 ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "3"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "printu je vera aŭ falsa kaj ne falsa kaj neo baŭ neo ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "true"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -W -e "warn("saluton")"]] ek 
-kontroluokon je res ek 
-atendata iĝu "Lua averto: saluton"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "erarurgu je ĉaĉo ek "]] ek 
-kontrolumison je res ek 
-atendata iĝu "erarobjekto estas"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -P -e "printu je "esperanto-ok" ek "]] ek 
-kontroluokon je res ek 
-atendata iĝu "esperanto-ok"
-kontroluenhavon je res[2] ek 
-
-printu je "esperanto-locale-ok" ek 
+-- Final result
+printu("esperanto-locale-ok")

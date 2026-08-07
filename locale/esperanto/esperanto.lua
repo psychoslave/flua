@@ -71,16 +71,16 @@ locale = {
   },
 
   delimiters = {
-    ["expression·grouping·opening"] = "je",
-    ["expression·grouping·closing"] = "ek",
-    ["index·opening"] = "ĉe",
-    ["index·closing"] = "ĉi",
-    ["constructor·opening"] = "ĉa",
-    ["constructor·closing"] = "ĉo",
+    ["expression·grouping·opening"] = "(",
+    ["expression·grouping·closing"] = ")",
+    ["index·opening"] = "[",
+    ["index·closing"] = "]",
+    ["constructor·opening"] = "{",
+    ["constructor·closing"] = "}",
 
     -- disigiloj de sintagmoj
-    ["element·separator"] = "tuj",
-    ["statement·separator"] = "nu",
+    ["element·separator"] = ",",
+    ["statement·separator"] = ";",
 
     -- Propra citado demandus almenaŭ apogo de malsamaj citiloj por eka kaj fina signoj:
     -- „ ... “
