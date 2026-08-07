@@ -233,16 +233,5 @@ locale = {
 
   ["identifier·aliases"] = {
     ["dromo"] = "os",
-    ["plenumu"] = "execute",
-    ["asertu"] = "assert",
-    -- "-urg/" en la senco "proviz/", kiel en "dramaturgo" kaj "demiurgo".
-    ["erarurgu"] = "error",
-    ["printu"] = "print",
-    ["ĉenurgu"] = "tostring",
-    ["avertu"] = "warn",
-    ["anstataŭigu"] = "gsub",
-    ["efemeranomo"] = "tmpname",
-    ["ĉeno"] = "string",
-    ["eneligo"] = "io",
   },
 }
