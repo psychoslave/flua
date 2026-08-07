@@ -228,6 +228,12 @@ locale = {
 
   aliases = {
     ["os·library·identifier"] = "dromo",
-    ["os·exit·method"] = "exit",
+    ["os·exit·method"] = "eliru",
+    ["print·function·alias"] = "printu",
+    ["assert·function·alias"] = "asertu",
+    ["error·function·alias"] = "erarurgu",
+    ["tostring·function·alias"] = "ĉenurgu",
+    ["string·library·localized·name"] = "locale.esperanto.signovico",
+    ["io·library·localized·name"] = "locale.esperanto.elugi",
   },
 }

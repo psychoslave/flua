@@ -58,6 +58,37 @@ static const char *locale_os_name (lua_State *L) {
 }
 
 
+static void add_locale_function_aliases (lua_State *L) {
+  int top = lua_gettop(L);
+  struct {
+    const char *key;
+    const char *native;
+  } aliases[] = {
+    {"print·function·alias", "print"},
+    {"assert·function·alias", "assert"},
+    {"error·function·alias", "error"},
+    {"tostring·function·alias", "tostring"},
+    {NULL, NULL}
+  };
+  
+  lua_pushglobaltable(L);  /* push _G */
+  for (int i = 0; aliases[i].key != NULL; i++) {
+    const char *localized = locale_get(L, "aliases", aliases[i].key, NULL);
+    if (localized != NULL && localized[0] != '\0') {
+      /* Get native function from _G */
+      lua_getfield(L, -1, aliases[i].native);  /* push native function */
+      if (!lua_isnil(L, -1)) {
+        lua_setfield(L, -2, localized);  /* _G[localized] = native_func */
+      } else {
+        lua_pop(L, 1);  /* pop nil */
+      }
+    }
+  }
+  lua_pop(L, 1);  /* pop _G */
+  lua_settop(L, top);
+}
+
+
 /*
 ** Standard Libraries. (Must be listed in the same ORDER of their
 ** respective constants LUA_<libname>K.)
@@ -106,4 +137,21 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   }
   lua_assert((mask >> 1) == LUA_UTF8LIBK);
   lua_pop(L, 1);  /* remove PRELOAD table */
+  add_locale_function_aliases(L);  /* add localized function aliases */
+  
+  /* Add localized library aliases by name (e.g., ĉeno = string, eneligo = io) */
+  lua_pushglobaltable(L);
+  lua_getfield(L, -1, "string");
+  if (!lua_isnil(L, -1)) {
+    lua_setfield(L, -2, "ĉeno");  /* _G.ĉeno = _G.string */
+  } else {
+    lua_pop(L, 1);
+  }
+  lua_getfield(L, -1, "io");
+  if (!lua_isnil(L, -1)) {
+    lua_setfield(L, -2, "eneligo");  /* _G.eneligo = _G.io */
+  } else {
+    lua_pop(L, 1);
+  }
+  lua_pop(L, 1);  /* pop _G */
 }

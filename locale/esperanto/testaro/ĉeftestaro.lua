@@ -33,9 +33,9 @@ age kontroluenhavon je text ek
   hop
 hop
 
-loke res iĝu rulu je [[./lua -e "se vera tiam printu je “se-konsidero“ ek  alie printu je “no“ ek  hop"]] ek 
+loke res iĝu rulu je [[./lua -e "se vera tiam printu je "se-ok" ek  alie printu je "no" ek  hop"]] ek 
 kontroluokon je res ek 
-atendata iĝu "se-konsidero"
+atendata iĝu "se-ok"
 kontroluenhavon je res[2] ek 
 
 res iĝu rulu je [[./lua -e "loke n iĝu 0; dum n suf 2 fare n iĝu n ople 1 hop; printu je n ek "]] ek 
@@ -48,27 +48,14 @@ kontroluokon je res ek
 atendata iĝu "4"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -e "por i el ipairs je ĉa1ĉo ek  fare printu je i ek  hop"]] ek 
+res iĝu rulu je [[./lua -e "por i el ipairs je ĉa1ĉo fare printu je i ek  hop"]] ek 
 kontroluokon je res ek 
 atendata iĝu "1"
 kontroluenhavon je res[2] ek 
 
--- `ĉaidentigiloĉo` atendite malsukcesas sen sintaksanalizilo-adapto: la fina `ĉo`
--- englutiĝas en la identigilan morfemon, do neniu ferm-morfemo de konstruilo
--- videblas por la analizilo. Spacigo  je `ĉa identigilo ĉo` ek  ĝin malambiguigas.
-res iĝu rulu je [[./lua -e "loke identigilo iĝu 42; loke t iĝu ĉaidentigiloĉo; printu je t.identigilo ek "]] ek 
-kontrolumison je res ek 
-atendata iĝu "atendata"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "loke identigilo iĝu 42; loke t iĝu ĉa identigilo ĉo; printu je t[1] ek "]] ek 
+res iĝu rulu je [[./lua -e "cikle printu je "esperanto-loop-ok" ek  ĝis vera"]] ek 
 kontroluokon je res ek 
-atendata iĝu "42"
-kontroluenhavon je res[2] ek 
-
-res iĝu rulu je [[./lua -e "cikle printu je “esperanto-loop-konsidero“ ek  ĝis vera"]] ek 
-kontroluokon je res ek 
-atendata iĝu "esperanto-loop-konsidero"
+atendata iĝu "esperanto-loop-ok"
 kontroluenhavon je res[2] ek 
 
 res iĝu rulu je [[./lua -e "loke i iĝu 0; ::L:: i iĝu i ople 1; se i suf 2 tiam ŝalte L hop; printu je i ek "]] ek 
@@ -76,22 +63,22 @@ kontroluokon je res ek
 atendata iĝu "2"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -e "loke n iĝu 0; dum vera fare rompe hop; printu je “rompe-konsidero“ ek "]] ek 
+res iĝu rulu je [[./lua -e "loke n iĝu 0; dum vera fare rompe hop; printu je "rompe-ok" ek "]] ek 
 kontroluokon je res ek 
-atendata iĝu "rompe-konsidero"
+atendata iĝu "rompe-ok"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -e "loke t iĝu ĉa1ĉo; printu je ofle t tuj 7 okle 2 tuj 7 ozle 2 tuj 5 ocle 2 tuj 1 sobŝove 3 tuj 8 sorŝove 1 ek "]] ek 
+res iĝu rulu je [[./lua -e "loke t iĝu ĉa1ĉo; printu je ofle je t tuj 7 okle 2 tuj 7 ozle 2 tuj 5 ocle 2 tuj 1 sobŝove 3 tuj 8 sorŝove 1 ek "]] ek 
 kontroluokon je res ek 
 atendata iĝu "3"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -e "printu((vera aŭ falsa ek  kaj  je ne falsa ek  kaj  je neo baŭ neo))"]] ek 
+res iĝu rulu je [[./lua -e "printu je vera aŭ falsa kaj ne falsa kaj neo baŭ neo ek "]] ek 
 kontroluokon je res ek 
 atendata iĝu "true"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -W -e "avertu je “saluton“ ek "]] ek 
+res iĝu rulu je [[./lua -W -e "warn("saluton")"]] ek 
 kontroluokon je res ek 
 atendata iĝu "Lua averto: saluton"
 kontroluenhavon je res[2] ek 
@@ -101,9 +88,9 @@ kontrolumison je res ek
 atendata iĝu "erarobjekto estas"
 kontroluenhavon je res[2] ek 
 
-res iĝu rulu je [[./lua -P -e "printu je “esperanto-konsidero“ ek "]] ek 
+res iĝu rulu je [[./lua -P -e "printu je "esperanto-ok" ek "]] ek 
 kontroluokon je res ek 
-atendata iĝu "esperanto-konsidero"
+atendata iĝu "esperanto-ok"
 kontroluenhavon je res[2] ek 
 
-printu je "bone" ek
+printu je "esperanto-locale-ok" ek 

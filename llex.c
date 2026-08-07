@@ -189,20 +189,6 @@ static void add_locale_keyword_symbol (lua_State *L, const char *key,
   }
 }
 
-static void add_identifier_alias_pair (const char *alias,
-                                       const char *canonical_name) {
-  if (alias[0] != '\0' && canonical_name[0] != '\0' &&
-      strcmp(alias, canonical_name) != 0) {
-    lua_assert(locale_ops_n < cast_int(sizeof(locale_ops) / sizeof(locale_ops[0])));
-    locale_ops[locale_ops_n].bytes = alias;
-    locale_ops[locale_ops_n].len = strlen(alias);
-    locale_ops[locale_ops_n].token = TK_NAME;
-    locale_ops[locale_ops_n].name = canonical_name;
-    locale_ops_n++;
-  }
-}
-
-
 static void add_ignored_layout_glyph (const char *bytes) {
   int i;
   size_t len = strlen(bytes);
