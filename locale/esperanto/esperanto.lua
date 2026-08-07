@@ -174,6 +174,8 @@ locale = {
     ["interactive·locals·crossline·warning"] =
       "averto: lokaj variabloj ne travivas trans linioj en interaga reĝimo",
     ["name·or·variadic·expansion·expected"] = "<nomo> aŭ '...' atendata",
+    ["token·expected"] = "%s atendata",
+    ["token·expected·to·close"] = "%s atendata (por fermi %s ĉe linio %d)",
     ["function·arguments·expected"] = "funkciaj argumentoj atendataj",
     ["lua·function·expected"] = "Lua-funkcio atendata",
     ["argument·table·expected"] = "'arg' ne estas tabelo",
@@ -222,5 +224,25 @@ locale = {
     ["locale·table·registry·key"] = "LUA_LOCALE_TABLE",
     ["base·locale·table·registry·key"] = "LUA_BASE_LOCALE_TABLE",
     ["plain·locale·registry·flag"] = "LUA_PLAIN_LOCALE",
+  },
+
+  aliases = {
+    ["os·library·identifier"] = "dromo",
+    ["os·exit·method"] = "exit",
+  },
+
+  ["identifier·aliases"] = {
+    ["dromo"] = "os",
+    ["plenumu"] = "execute",
+    ["asertu"] = "assert",
+    -- "-urg/" en la senco "proviz/", kiel en "dramaturgo" kaj "demiurgo".
+    ["erarurgu"] = "error",
+    ["printu"] = "print",
+    ["ĉenurgu"] = "tostring",
+    ["avertu"] = "warn",
+    ["anstataŭigu"] = "gsub",
+    ["efemeranomo"] = "tmpname",
+    ["ĉeno"] = "string",
+    ["eneligo"] = "io",
   },
 }
