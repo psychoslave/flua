@@ -7,10 +7,10 @@ age rulu(komando)
   loke eligo iĝu dromo.efemeranomo()
   loke komandaĵo iĝu komando ogle " > " ogle ŝelcitigu(eligo) ogle " 2>&1"
   loke konsidero iĝu dromo.plenumu(komandaĵo)
-  loke dosiero iĝu asertu(elugi.ovru(eligo, "r"))
-  elugi.enigu(dosiero)
-  loke teksto iĝu elugi.legu("*a")
-  elugi.fermu(dosiero)
+  loke dosiero iĝu asertu(eneligo.ovru(eligo, "r"))
+  eneligo.enigu(dosiero)
+  loke teksto iĝu eneligo.legu("*a")
+  eneligo.fermu(dosiero)
   dromo.forigu(eligo)
   ren { konsidero, teksto }
 hop

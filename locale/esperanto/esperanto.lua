@@ -266,6 +266,6 @@ locale = {
     ["warn·function·alias"] = "avertu",
     ["tostring·function·alias"] = "ĉenurgu",
     ["string·library·localized·name"] = "locale.esperanto.signovico",
-    ["io·library·localized·name"] = "locale.esperanto.elugi",
+    ["io·library·localized·name"] = "eneligo",
   },
 }

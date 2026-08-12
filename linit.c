@@ -209,7 +209,7 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   add_locale_global_aliases(L);
   add_locale_table_field_aliases(L);
   
-  /* Add localized library aliases by name (e.g., signovico = string, elugi = io) */
+  /* Add localized library aliases by name (e.g., signovico = string, eneligo = io) */
   lua_pushglobaltable(L);
   lua_getfield(L, -1, "string");
   if (!lua_isnil(L, -1)) {
@@ -219,7 +219,7 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   }
   lua_getfield(L, -1, "io");
   if (!lua_isnil(L, -1)) {
-   lua_setfield(L, -2, "elugi");  /* _G.elugi = _G.io */
+   lua_setfield(L, -2, "eneligo");  /* _G.eneligo = _G.io */
   } else {
    lua_pop(L, 1);
   }
