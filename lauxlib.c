@@ -133,18 +133,36 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
 
 
 static void pushfuncname (lua_State *L, lua_Debug *ar) {
-  if (*ar->namewhat != '\0')  /* is there a name from code? */
-    lua_pushfstring(L, "%s '%s'", ar->namewhat, ar->name);  /* use it */
+  if (*ar->namewhat != '\0') {  /* is there a name from code? */
+    const char *localized_what = ar->namewhat;
+    if (strcmp(ar->namewhat, "field") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·field", ar->namewhat);
+    else if (strcmp(ar->namewhat, "method") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·method", ar->namewhat);
+    else if (strcmp(ar->namewhat, "global") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·global", ar->namewhat);
+    else if (strcmp(ar->namewhat, "local") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·local", ar->namewhat);
+    else if (strcmp(ar->namewhat, "upvalue") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·upvalue", ar->namewhat);
+    else if (strcmp(ar->namewhat, "constant") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·constant", ar->namewhat);
+    else if (strcmp(ar->namewhat, "metamethod") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·metamethod", ar->namewhat);
+    else if (strcmp(ar->namewhat, "hook") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·hook", ar->namewhat);
+    lua_pushfstring(L, "%s '%s'", localized_what, ar->name);
+  }
   else if (*ar->what == 'm')  /* main? */
       lua_pushstring(L, locale_get(L, "diagnostics", "main·chunk·identity", "main·chunk·identity"));
   else if (pushglobalfuncname(L, ar)) {  /* try a global name */
-    lua_pushfstring(L, "function '%s'", lua_tostring(L, -1));
+    lua_pushfstring(L, locale_get(L, "diagnostics", "traceback·function·name·format", "function '%s'"), lua_tostring(L, -1));
     lua_remove(L, -2);  /* remove name */
   }
   else if (*ar->what != 'C')  /* for Lua functions, use <file:line> */
-    lua_pushfstring(L, "function <%s:%d>", ar->short_src, ar->linedefined);
+    lua_pushfstring(L, locale_get(L, "diagnostics", "traceback·function·source·format", "function <%s:%d>"), ar->short_src, ar->linedefined);
   else  /* nothing left... */
-    lua_pushliteral(L, "?");
+    lua_pushstring(L, locale_get(L, "diagnostics", "traceback·unknown·function", "?"));
 }
 
 
@@ -184,10 +202,14 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
     }
     else {
       lua_getinfo(L1, "Slnt", &ar);
-      if (ar.currentline <= 0)
-        lua_pushfstring(L, "\n\t%s: in ", ar.short_src);
-      else
-        lua_pushfstring(L, "\n\t%s:%d: in ", ar.short_src, ar.currentline);
+      if (ar.currentline <= 0) {
+        const char *fmt = locale_get(L, "diagnostics", "traceback·line·format·no·line", "\n\t%s: in ");
+        lua_pushfstring(L, fmt, ar.short_src);
+      }
+      else {
+        const char *fmt = locale_get(L, "diagnostics", "traceback·line·format·with·line", "\n\t%s:%d: in ");
+        lua_pushfstring(L, fmt, ar.short_src, ar.currentline);
+      }
       luaL_addvalue(&b);
       pushfuncname(L, &ar);
       luaL_addvalue(&b);
