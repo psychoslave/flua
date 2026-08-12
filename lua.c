@@ -246,6 +246,13 @@ static void createargtable (lua_State *L, char **argv, int argc, int script) {
     lua_rawseti(L, -2, i - script);
   }
   lua_setglobal(L, "arg");
+  {
+    const char *arg_alias = locale_get(L, "aliases", "arg·table·alias", NULL);
+    if (arg_alias != NULL && arg_alias[0] != '\0') {
+      lua_getglobal(L, "arg");
+      lua_setglobal(L, arg_alias);
+    }
+  }
 }
 
 

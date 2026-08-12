@@ -977,7 +977,9 @@ static utf8proc_int32_t current_utf8_codepoint (LexState *ls, size_t *nbytes) {
 
 static int is_identifier_start_codepoint (utf8proc_int32_t codepoint) {
   utf8proc_category_t cat = utf8proc_category(codepoint);
-  return (cat >= UTF8PROC_CATEGORY_LU && cat <= UTF8PROC_CATEGORY_LO);
+  if (cat >= UTF8PROC_CATEGORY_LU && cat <= UTF8PROC_CATEGORY_LO) return 1;
+  if (cat >= UTF8PROC_CATEGORY_SM && cat <= UTF8PROC_CATEGORY_SO) return 1;
+  return 0;
 }
 
 static int is_identifier_cont_codepoint (utf8proc_int32_t codepoint) {

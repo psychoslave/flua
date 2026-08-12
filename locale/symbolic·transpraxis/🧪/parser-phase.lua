@@ -1,15 +1,10 @@
-local function expect_fail(src, needle)
+local function expect_ok(src)
   local f, err = load(src)
-  assert(f == nil and type(err) == "string")
-  if needle ~= nil then
-    assert(string.find(err, needle, 1, true))
-  end
+  assert(f ~= nil and err == nil)
 end
 
--- Localized attributes exist in locale data, but parser attribute grammar
--- still requires native NAME tokens inside <...>.
-expect_fail("local c <❄️> = 1", "<name> expected")
-expect_fail("local c <🔒> = setmetatable({}, {__close = function() end})",
-            "<name> expected")
+-- Symbolic identifiers are accepted in attribute positions.
+expect_ok("local c <❄️> = 1")
+expect_ok("local c <🔒> = setmetatable({}, {__close = function() end})")
 
 print("symbolic-parser-phase-ok")

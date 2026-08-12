@@ -589,12 +589,14 @@ LUAMOD_API int luaopen_base (lua_State *L) {
   /* open lib into global table */
   lua_pushglobaltable(L);
   luaL_setfuncs(L, base_funcs, 0);
-  /* set localized global-table alias */
-  lua_pushvalue(L, -1);
-  lua_setfield(L, -2, gname);
-  if (!plain && strcmp(gname, LUA_GNAME) != 0) {
+  if (!plain) {
+    /* set localized global-table alias */
     lua_pushvalue(L, -1);
-    lua_setfield(L, -2, LUA_GNAME);
+    lua_setfield(L, -2, gname);
+    if (strcmp(gname, LUA_GNAME) != 0) {
+      lua_pushvalue(L, -1);
+      lua_setfield(L, -2, LUA_GNAME);
+    }
   }
   /* set global _VERSION */
   lua_pushliteral(L, LUA_VERSION);
