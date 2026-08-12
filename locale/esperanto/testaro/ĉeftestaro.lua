@@ -15,21 +15,21 @@ age rulu(komando)
   ren { konsidero, teksto }
 hop
 
-age kontroluokon(res)
-  se ne res[1] tiam
-    erarurgu(res[2])
+age rulkontrolu(rezulto)
+  se ne rezulto[1] tiam
+    erarurgu(rezulto[2])
   hop
 hop
 
-age kontrolumison(res)
-  se res[1] tiam
+age misendakontrolu(rezulto)
+  se rezulto[1] tiam
     erarurgu("atendita malsukceso")
   hop
 hop
 
 loke atendata iĝu ""
 
-age kontroluenhavon(teksto)
+age enhavkontrolu(teksto)
   se teksto baŭ neo tiam
     erarurgu("mankas eligo")
   hop
@@ -38,69 +38,69 @@ age kontroluenhavon(teksto)
   hop
 hop
 
-loke res iĝu rulu([[./lua -e "se vera tiam printu(“se-konsidero“) alie printu(“no“) hop"]])
-kontroluokon(res)
+loke rezulto iĝu rulu([[./lua -e "se vera tiam printu(“se-konsidero“) alie printu(“alie-konsidero“) hop"]])
+rulkontrolu(rezulto)
 atendata iĝu "se-konsidero"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "loke n iĝu 0; dum n suf 2 fare n iĝu n ople 1 hop; printu(n)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "loke n iĝu 0; dum n suf 2 fare n iĝu n ople 1 hop; printu(n)"]])
+rulkontrolu(rezulto)
 atendata iĝu "2"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "age duoblu(n) ren n ople n hop; printu(duoblu(2))"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "age duoblu(n) ren n ople n hop; printu(duoblu(2))"]])
+rulkontrolu(rezulto)
 atendata iĝu "4"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "por i el ipairs({1}) fare printu(i) hop"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "por i el ipairs({1}) fare printu(i) hop"]])
+rulkontrolu(rezulto)
 atendata iĝu "1"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "loke identigilo iĝu 42; loke t iĝu {identigilo}; printu(t[1])"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "loke identigilo iĝu 42; loke t iĝu {identigilo}; printu(t[1])"]])
+rulkontrolu(rezulto)
 atendata iĝu "42"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "cikle printu(“esperanto-cikle-konsidero“) ĝis vera"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "cikle printu(“esperanto-cikle-konsidero“) ĝis vera"]])
+rulkontrolu(rezulto)
 atendata iĝu "esperanto-cikle-konsidero"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "loke i iĝu 0; ::L:: i iĝu i ople 1; se i suf 2 tiam ŝalte L hop; printu(i)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "loke i iĝu 0; ::L:: i iĝu i ople 1; se i suf 2 tiam ŝalte L hop; printu(i)"]])
+rulkontrolu(rezulto)
 atendata iĝu "2"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "loke n iĝu 0; dum vera fare rompe hop; printu(“rompe-konsidero“)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "loke n iĝu 0; dum vera fare rompe hop; printu(“rompe-konsidero“)"]])
+rulkontrolu(rezulto)
 atendata iĝu "rompe-konsidero"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "loke t iĝu {1,2,3}; printu(ofle t, 7 okle 2, 7 ozle 2, 5 ocle 2, 1 sobŝove 3, 8 sorŝove 1)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -e "loke t iĝu {1,2,3}; printu(ofle t, 7 okle 2, 7 ozle 2, 5 ocle 2, 1 sobŝove 3, 8 sorŝove 1)"]])
+rulkontrolu(rezulto)
 atendata iĝu "3"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "printu((vera aŭ falsa) kaj (ne falsa) kaj (neo baŭ neo))"]])
-kontroluokon(res)
-atendata iĝu "true"
-kontroluenhavon(res[2])
+rezulto iĝu rulu([[./lua -e "printu((vera aŭ falsa) kaj (ne falsa) kaj (neo baŭ neo))"]])
+rulkontrolu(rezulto)
+atendata iĝu "vera"
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -W -e "avertu(“saluton“)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -W -e "avertu(“saluton“)"]])
+rulkontrolu(rezulto)
 atendata iĝu "Lua averto: saluton"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -e "erarurgu({})"]])
-kontrolumison(res)
+rezulto iĝu rulu([[./lua -e "erarurgu({})"]])
+misendakontrolu(rezulto)
 atendata iĝu "erarobjekto estas"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
-res iĝu rulu([[./lua -P -e "printu(“esperanto-konsidero“)"]])
-kontroluokon(res)
+rezulto iĝu rulu([[./lua -P -e "printu(“esperanto-konsidero“)"]])
+rulkontrolu(rezulto)
 atendata iĝu "esperanto-konsidero"
-kontroluenhavon(res[2])
+enhavkontrolu(rezulto[2])
 
 printu("esperanto-lokalo-konsidero")
