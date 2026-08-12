@@ -117,6 +117,9 @@ fi
 must_run "Test Esperanto locale smoke suite" 20 \
   "./lua locale/esperanto/testaro/ĉeftestaro.lua" || exit 1
 
+must_run "Test Esperanto locale diversaĵoj" 20 \
+  "./lua locale/esperanto/testaro/diversaĵoj.lua" || exit 1
+
 run "Probe native tests under -P (Esperanto kernel)" 60 \
   "cd testes && env -i PATH='$PATH' HOME='$HOME' TERM='$TERM' ../lua -P main.lua"
 if [ "$RUN_RC" -eq 0 ]; then
