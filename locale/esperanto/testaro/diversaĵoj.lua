@@ -14,7 +14,7 @@ loke funkciis, mesaĝo iĝu pcall(age()
 hop)
 
 asertu(ne funkciis)
-asertu(ĉeno.trovu(mesaĝo, "provo voki je nil%-valoro"))
+asertu(ĉeno.trovu(mesaĝo, "provo voki je neo%-valoro"))
 asertu(ĉeno.trovu(mesaĝo, "en kampo 'rulu'"))
 -- Asertu ke ni ne havas anglan "in"
 asertu(ne ĉeno.trovu(mesaĝo, " in ", 1, vera))

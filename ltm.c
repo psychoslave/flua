@@ -15,6 +15,34 @@
 #include "lua.h"
 
 #include "ldebug.h"
+
+
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
+  lua_settop(L, top);
+  return out;
+}
 #include "ldo.h"
 #include "lgc.h"
 #include "lobject.h"
@@ -87,6 +115,7 @@ const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
 /*
 ** Return the name of the type of an object. For tables and userdata
 ** with metatable, use their '__name' metafield, if present.
+** Otherwise, use the localized type name.
 */
 const char *luaT_objtypename (lua_State *L, const TValue *o) {
   Table *mt;
@@ -96,7 +125,16 @@ const char *luaT_objtypename (lua_State *L, const TValue *o) {
     if (ttisstring(name))  /* is '__name' a string? */
       return getstr(tsvalue(name));  /* use it as type name */
   }
-  return ttypename(ttype(o));  /* else use standard type name */
+  /* use localized type name */
+  switch (ttype(o)) {
+    case LUA_TNIL: return locale_get(L, "keywords", "null·literal", "nil");
+    case LUA_TBOOLEAN: return locale_get(L, "keywords", "truth·literal", "boolean");
+    case LUA_TNUMBER: return locale_get(L, "keywords", "number·token", "number");
+    case LUA_TSTRING: return locale_get(L, "keywords", "string·token", "string");
+    case LUA_TTABLE: return locale_get(L, "types", "table·type·name", "table");
+    case LUA_TFUNCTION: return locale_get(L, "keywords", "function·introducer", "function");
+    default: return ttypename(ttype(o));  /* fallback to standard type name */
+  }
 }
 
 
