@@ -57,6 +57,10 @@ static const char *locale_os_name (lua_State *L) {
   return locale_get(L, "aliases", "os·library·identifier", LUA_OSLIBNAME);
 }
 
+static const char *locale_io_name (lua_State *L) {
+  return locale_get(L, "aliases", "io·library·identifier", LUA_IOLIBNAME);
+}
+
 
 static void add_locale_global_aliases (lua_State *L) {
   int top = lua_gettop(L);
@@ -197,6 +201,15 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
           lua_pop(L, 1);  /* global table */
         }
       }
+      if (mask == LUA_IOLIBK) {
+        const char *ioname = locale_io_name(L);
+        if (ioname[0] != '\0' && strcmp(ioname, name) != 0) {
+          lua_pushglobaltable(L);
+          lua_pushvalue(L, -2);  /* library table */
+          lua_setfield(L, -2, ioname);
+          lua_pop(L, 1);  /* global table */
+        }
+      }
       lua_pop(L, 1);  /* remove result from the stack */
     }
     else if (preload & mask) {  /* selected? */
@@ -208,20 +221,5 @@ LUALIB_API void luaL_openselectedlibs (lua_State *L, int load, int preload) {
   lua_pop(L, 1);  /* remove PRELOAD table */
   add_locale_global_aliases(L);
   add_locale_table_field_aliases(L);
-  
-  /* Add localized library aliases by name (e.g., signovico = string, eneligo = io) */
-  lua_pushglobaltable(L);
-  lua_getfield(L, -1, "string");
-  if (!lua_isnil(L, -1)) {
-   lua_setfield(L, -2, "signovico");  /* _G.signovico = _G.string */
-  } else {
-   lua_pop(L, 1);
-  }
-  lua_getfield(L, -1, "io");
-  if (!lua_isnil(L, -1)) {
-   lua_setfield(L, -2, "eneligo");  /* _G.eneligo = _G.io */
-  } else {
-   lua_pop(L, 1);
-  }
-  lua_pop(L, 1);  /* pop _G */
 }
+

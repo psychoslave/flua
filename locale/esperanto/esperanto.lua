@@ -14,6 +14,7 @@ locale = {
     ["conditional·protasis"] = "se",
     ["iteration·domain"] = "el",
     ["lexical·scope·declaration"] = "loke",
+    -- Dum nenio estus semantike pli taŭga, "neo" estas sufiĉe bona kaj estas nur 3 literoj, kiel "nil".
     ["null·literal"] = "neo",
     ["negation·operator"] = "ne",
     ["disjunction·operator"] = "aŭ",
@@ -265,7 +266,7 @@ locale = {
     ["error·function·alias"] = "erarurgu",
     ["warn·function·alias"] = "avertu",
     ["tostring·function·alias"] = "ĉenurgu",
-    ["string·library·localized·name"] = "locale.esperanto.signovico",
-    ["io·library·localized·name"] = "eneligo",
+    ["string·library·identifier"] = "ĉeno",
+    ["io·library·identifier"] = "eneligo",
   },
 }

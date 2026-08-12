@@ -4,6 +4,9 @@
 asertu(ĉenurgu(vera) baŭ "vera")
 asertu(ĉenurgu(falsa) baŭ "falsa")
 
+-- Testu ĉeno biblioteko
+asertu(ne (ĉeno baŭ neo))
+
 -- Testu spuro de eraro (en / in)
 loke funkciis, mesaĝo iĝu pcall(age()
   loke objekto iĝu {}
@@ -11,11 +14,11 @@ loke funkciis, mesaĝo iĝu pcall(age()
 hop)
 
 asertu(ne funkciis)
-asertu(signovico.trovu(mesaĝo, "provo voki je nil%-valoro"))
-asertu(signovico.trovu(mesaĝo, "en kampo 'rulu'"))
+asertu(ĉeno.trovu(mesaĝo, "provo voki je nil%-valoro"))
+asertu(ĉeno.trovu(mesaĝo, "en kampo 'rulu'"))
 -- Asertu ke ni ne havas anglan "in"
-asertu(ne signovico.trovu(mesaĝo, " in ", 1, vera))
-asertu(ne signovico.trovu(mesaĝo, "valuevarinfo·kind·name", 1, vera))
+asertu(ne ĉeno.trovu(mesaĝo, " in ", 1, vera))
+asertu(ne ĉeno.trovu(mesaĝo, "valuevarinfo·kind·name", 1, vera))
 
 -- Testu eneligo biblioteko
 asertu(ne (eneligo baŭ neo))
