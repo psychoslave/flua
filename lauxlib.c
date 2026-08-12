@@ -87,7 +87,7 @@ static int findfield (lua_State *L, int objidx, int level) {
       }
       else if (findfield(L, objidx, level - 1)) {  /* try recursively */
         /* stack: lib_name, lib_table, field_name (top) */
-        lua_pushliteral(L, ".");  /* place '.' between the two names */
+        lua_pushstring(L, locale_get(L, "operators", "field·access·operator", "."));  /* place field access operator between the two names */
         lua_replace(L, -3);  /* (in the slot occupied by table) */
         lua_concat(L, 3);  /* lib_name.field_name */
         return 1;
@@ -1015,7 +1015,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   int c;
   int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
   if (filename == NULL) {
-    lua_pushliteral(L, "=stdin");
+    lua_pushstring(L, locale_get(L, "repl", "stdin·source·identity", "=stdin"));
     lf.f = stdin;
   }
   else {
@@ -1145,7 +1145,7 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
             : locale_get(L, "keywords", "falsity·literal", "false"));
         break;
       case LUA_TNIL:
-        lua_pushliteral(L, "nil");
+        lua_pushstring(L, locale_get(L, "keywords", "null·literal", "nil"));
         break;
       default: {
         int tt = luaL_getmetafield(L, idx, "__name");  /* try name */

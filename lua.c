@@ -812,7 +812,8 @@ static int multiline (lua_State *L) {
     int exprstatus = LUA_OK;
     if (!stmt_incomplete && status != LUA_OK) {
       retline = lua_pushfstring(L, "%s %s", rtkw, line);
-      exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
+      { const char *stdin_id = locale_get(L, "repl", "stdin·source·identity", "=stdin");
+        exprstatus = luaL_loadbufferx(L, retline, strlen(retline), stdin_id, "t"); }
       expr_incomplete = incomplete(L, exprstatus);
       if (exprstatus == LUA_OK) {
         /* wrapped expression succeeded; keep compiled chunk, remove statement error and return string */
@@ -828,7 +829,8 @@ static int multiline (lua_State *L) {
       if (expr_incomplete && !stmt_incomplete && status != LUA_OK) {
         lua_pop(L, 1);  /* remove statement error */
         retline = lua_pushfstring(L, "%s %s;", rtkw, line);
-        exprstatus = luaL_loadbufferx(L, retline, strlen(retline), "=stdin", "t");
+        { const char *stdin_id = locale_get(L, "repl", "stdin·source·identity", "=stdin");
+          exprstatus = luaL_loadbufferx(L, retline, strlen(retline), stdin_id, "t"); }
         lua_remove(L, -2);  /* remove generated "return" line */
         return exprstatus;  /* report expression-side incomplete error */
       }
