@@ -779,10 +779,11 @@ static int addreturn (lua_State *L) {
 
 
 static void checklocal (lua_State *L, const char *line) {
-  static const size_t szloc = sizeof("local") - 1;
+  const char *local_kw = locale_get(L, "keywords", "lexical·scope·declaration", "local");
+  size_t szloc = strlen(local_kw);
   static const char space[] = " \t";
   line += strspn(line, space);  /* skip spaces */
-  if (strncmp(line, "local", szloc) == 0 &&  /* "local"? */
+  if (strncmp(line, local_kw, szloc) == 0 &&  /* localized "local"? */
       strchr(space, *(line + szloc)) != NULL) {  /* followed by a space? */
     lua_writestringerror("%s\n", locale_get(L, "diagnostics",
       "interactive·locals·crossline·warning",
