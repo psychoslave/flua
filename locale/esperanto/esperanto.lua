@@ -150,7 +150,7 @@ locale = {
     ["incomplete·input·marker"] = "<dosierfino>",
     ["interactive·source·identity"] = "=ĉefenigujo",
     ["commandline·source·identity"] = "=(komandlinio)",
-    ["stdin·source·identity"] = "=normenigo",
+    ["standard·input·source·identity"] = "=normenigo",
   },
 
   diagnostics = {
