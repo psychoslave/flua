@@ -741,11 +741,32 @@ static const char *getupvalname (CallInfo *ci, const TValue *o,
 
 static const char *formatvarinfo (lua_State *L, const char *kind,
                                                 const char *name) {
+  const char *localized_kind = kind;
+  if (kind != NULL) {
+    if (strcmp(kind, "local") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·local", kind);
+    else if (strcmp(kind, "upvalue") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·upvalue", kind);
+    else if (strcmp(kind, "global") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·global", kind);
+    else if (strcmp(kind, "field") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·field", kind);
+    else if (strcmp(kind, "method") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·method", kind);
+    else if (strcmp(kind, "constant") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·constant", kind);
+    else if (strcmp(kind, "for iterator") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·for·iterator", kind);
+    else if (strcmp(kind, "metamethod") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·metamethod", kind);
+    else if (strcmp(kind, "hook") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·hook", kind);
+  }
   if (kind == NULL)
     return "";  /* no information */
   else
-    return luaO_pushfstring(L, locale_get(L, "diagnostics", "varinfo·kind·name", "varinfo·kind·name"),
-                            kind, name);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "varinfo·kind·name", " (%s '%s')"),
+                            localized_kind, name);
 }
 
 /*
@@ -774,7 +795,22 @@ static const char *varinfo (lua_State *L, const TValue *o) {
 static l_noret typeerror (lua_State *L, const TValue *o, const char *op,
                           const char *extra) {
   const char *t = luaT_objtypename(L, o);
-  luaG_runerror(L, "attempt to %s a %s value%s", op, t, extra);
+  const char *localized_op = op;
+  if (strcmp(op, "call") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·call", op);
+  else if (strcmp(op, "concatenate") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·concatenate", op);
+  else if (strcmp(op, "get length of") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·get·length·of", op);
+  else if (strcmp(op, "index") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·index", op);
+  else if (strcmp(op, "perform arithmetic on") == 0)
+    localized_op = locale_get(L, "diagnostics",
+                              "operation·perform·arithmetic·on", op);
+  else if (strcmp(op, "perform bitwise operation on") == 0)
+    localized_op = locale_get(L, "diagnostics",
+                              "operation·perform·bitwise·operation·on", op);
+  luaG_runerror(L, "attempt to %s a %s value%s", localized_op, t, extra);
 }
 
 
