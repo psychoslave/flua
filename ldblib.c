@@ -27,6 +27,33 @@
 */
 static const char *const HOOKKEY = "_HOOKKEY";
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 
 /*
 ** If L1 != L, L1 can be in any state, and therefore there are no
@@ -35,7 +62,8 @@ static const char *const HOOKKEY = "_HOOKKEY";
 */
 static void checkstack (lua_State *L, lua_State *L1, int n) {
   if (l_unlikely(L != L1 && !lua_checkstack(L1, n)))
-    luaL_error(L, "stack overflow");
+    luaL_error(L, "%s",
+      locale_get(L, "diagnostics", "stack·overflow", "stack overflow"));
 }
 
 
@@ -153,7 +181,9 @@ static int db_getinfo (lua_State *L) {
   lua_State *L1 = getthread(L, &arg);
   const char *options = luaL_optstring(L, arg+2, "flnSrtu");
   checkstack(L, L1, 3);
-  luaL_argcheck(L, options[0] != '>', arg + 2, "invalid option '>'");
+  luaL_argcheck(L, options[0] != '>', arg + 2,
+                locale_get(L, "diagnostics", "invalid·option·start",
+                           "invalid option '>'"));
   if (lua_isfunction(L, arg + 1)) {  /* info about a function? */
     options = lua_pushfstring(L, ">%s", options);  /* add '>' to 'options' */
     lua_pushvalue(L, arg + 1);  /* move function to 'L1' stack */
@@ -166,7 +196,8 @@ static int db_getinfo (lua_State *L) {
     }
   }
   if (!lua_getinfo(L1, options, &ar))
-    return luaL_argerror(L, arg+2, "invalid option");
+    return luaL_argerror(L, arg+2,
+      locale_get(L, "diagnostics", "invalid·option·generic", "invalid option"));
   lua_newtable(L);  /* table to collect results */
   if (strchr(options, 'S')) {
     lua_pushlstring(L, ar.source, ar.srclen);
@@ -217,7 +248,8 @@ static int db_getlocal (lua_State *L) {
     const char *name;
     int level = (int)luaL_checkinteger(L, arg + 1);
     if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
-      return luaL_argerror(L, arg+1, "level out of range");
+      return luaL_argerror(L, arg+1,
+        locale_get(L, "diagnostics", "level·out·of·range", "level out of range"));
     checkstack(L, L1, 1);
     name = lua_getlocal(L1, &ar, nvar);
     if (name) {
@@ -242,7 +274,8 @@ static int db_setlocal (lua_State *L) {
   int level = (int)luaL_checkinteger(L, arg + 1);
   int nvar = (int)luaL_checkinteger(L, arg + 2);
   if (l_unlikely(!lua_getstack(L1, level, &ar)))  /* out of range? */
-    return luaL_argerror(L, arg+1, "level out of range");
+    return luaL_argerror(L, arg+1,
+      locale_get(L, "diagnostics", "level·out·of·range", "level out of range"));
   luaL_checkany(L, arg+3);
   lua_settop(L, arg+3);
   checkstack(L, L1, 1);
@@ -291,7 +324,8 @@ static void *checkupval (lua_State *L, int argf, int argnup, int *pnup) {
   luaL_checktype(L, argf, LUA_TFUNCTION);  /* closure */
   id = lua_upvalueid(L, argf, nup);
   if (pnup) {
-    luaL_argcheck(L, id != NULL, argnup, "invalid upvalue index");
+    luaL_argcheck(L, id != NULL, argnup,
+      locale_get(L, "diagnostics", "invalid·upvalue·index", "invalid upvalue index"));
     *pnup = nup;
   }
   return id;
@@ -312,8 +346,10 @@ static int db_upvaluejoin (lua_State *L) {
   int n1, n2;
   checkupval(L, 1, 2, &n1);
   checkupval(L, 3, 4, &n2);
-  luaL_argcheck(L, !lua_iscfunction(L, 1), 1, "Lua function expected");
-  luaL_argcheck(L, !lua_iscfunction(L, 3), 3, "Lua function expected");
+  luaL_argcheck(L, !lua_iscfunction(L, 1), 1,
+                locale_get(L, "diagnostics", "lua·function·expected", "lua·function·expected"));
+  luaL_argcheck(L, !lua_iscfunction(L, 3), 3,
+                locale_get(L, "diagnostics", "lua·function·expected", "lua·function·expected"));
   lua_upvaluejoin(L, 1, n1, 3, n2);
   return 0;
 }
@@ -423,7 +459,7 @@ static int db_gethook (lua_State *L) {
 static int db_debug (lua_State *L) {
   for (;;) {
     char buffer[250];
-    lua_writestringerror("%s", "lua_debug> ");
+    lua_writestringerror("%s", locale_get(L, "repl", "debug·prompt", "debug·prompt"));
     if (fgets(buffer, sizeof(buffer), stdin) == NULL ||
         strcmp(buffer, "cont\n") == 0)
       return 0;
@@ -474,4 +510,3 @@ LUAMOD_API int luaopen_debug (lua_State *L) {
   luaL_newlib(L, dblib);
   return 1;
 }
-

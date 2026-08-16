@@ -22,6 +22,33 @@
 #include "lualib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 
 /*
 ** {==================================================================
@@ -174,7 +201,9 @@ static int os_tmpname (lua_State *L) {
   int err;
   lua_tmpnam(buff, err);
   if (l_unlikely(err))
-    return luaL_error(L, "unable to generate a unique filename");
+    return luaL_error(L, "%s",
+      locale_get(L, "diagnostics", "unable·to·generate·unique·filename",
+                 "unable to generate a unique filename"));
   lua_pushstring(L, buff);
   return 1;
 }
@@ -212,7 +241,8 @@ static int os_clock (lua_State *L) {
 static void setfield (lua_State *L, const char *key, int value, int delta) {
   #if (defined(LUA_NUMTIME) && LUA_MAXINTEGER <= INT_MAX)
     if (l_unlikely(value > LUA_MAXINTEGER - delta))
-      luaL_error(L, "field '%s' is out-of-bound", key);
+      luaL_error(L, "%s",
+        locale_get(L, "diagnostics", "field·out·of·bound", "field '%s' is out-of-bound"));
   #endif
   lua_pushinteger(L, (lua_Integer)value + delta);
   lua_setfield(L, -2, key);
@@ -257,14 +287,17 @@ static int getfield (lua_State *L, const char *key, int d, int delta) {
   lua_Integer res = lua_tointegerx(L, -1, &isnum);
   if (!isnum) {  /* field is not an integer? */
     if (l_unlikely(t != LUA_TNIL))  /* some other value? */
-      return luaL_error(L, "field '%s' is not an integer", key);
+      return luaL_error(L, "%s",
+        locale_get(L, "diagnostics", "field·not·integer", "field '%s' is not an integer"));
     else if (l_unlikely(d < 0))  /* absent field; no default? */
-      return luaL_error(L, "field '%s' missing in date table", key);
+      return luaL_error(L, "%s",
+        locale_get(L, "diagnostics", "field·missing·in·date·table", "field '%s' missing in date table"));
     res = d;
   }
   else {
     if (!(res >= 0 ? res - delta <= INT_MAX : INT_MIN + delta <= res))
-      return luaL_error(L, "field '%s' is out-of-bound", key);
+      return luaL_error(L, "%s",
+        locale_get(L, "diagnostics", "field·out·of·bound", "field '%s' is out-of-bound"));
     res -= delta;
   }
   lua_pop(L, 1);
@@ -286,14 +319,17 @@ static const char *checkoption (lua_State *L, const char *conv,
     }
   }
   luaL_argerror(L, 1,
-    lua_pushfstring(L, "invalid conversion specifier '%%%s'", conv));
+    lua_pushfstring(L, locale_get(L, "diagnostics",
+                                  "invalid·conversion·specifier·for·strftime",
+                                  "invalid conversion specifier '%%%s'"), conv));
   return conv;  /* to avoid warnings */
 }
 
 
 static time_t l_checktime (lua_State *L, int arg) {
   l_timet t = l_gettime(L, arg);
-  luaL_argcheck(L, (time_t)t == t, arg, "time out-of-bounds");
+  luaL_argcheck(L, (time_t)t == t, arg,
+    locale_get(L, "diagnostics", "time·out·of·bounds", "time out-of-bounds"));
   return (time_t)t;
 }
 
@@ -315,8 +351,10 @@ static int os_date (lua_State *L) {
   else
     stm = l_localtime(&t, &tmr);
   if (stm == NULL)  /* invalid date? */
-    return luaL_error(L,
-                 "date result cannot be represented in this installation");
+    return luaL_error(L, "%s",
+      locale_get(L, "diagnostics",
+                 "date·result·cannot·be·represented·in·this·installation",
+                 "date result cannot be represented in this installation"));
   if (strcmp(s, "*t") == 0) {
     lua_createtable(L, 0, 9);  /* 9 = number of fields */
     setallfields(L, stm);
@@ -364,8 +402,10 @@ static int os_time (lua_State *L) {
     setallfields(L, &ts);  /* update fields with normalized values */
   }
   if (t != (time_t)(l_timet)t || t == (time_t)(-1))
-    return luaL_error(L,
-                  "time result cannot be represented in this installation");
+    return luaL_error(L, "%s",
+      locale_get(L, "diagnostics",
+                 "time·result·cannot·be·represented·in·this·installation",
+                 "time result cannot be represented in this installation"));
   l_pushtime(L, t);
   return 1;
 }
@@ -394,15 +434,28 @@ static int os_setlocale (lua_State *L) {
 
 
 static int os_exit (lua_State *L) {
+  int first = 1;
   int status;
-  if (lua_isboolean(L, 1))
-    status = (lua_toboolean(L, 1) ? EXIT_SUCCESS : EXIT_FAILURE);
+  if (lua_type(L, 1) == LUA_TTABLE)
+    first = 2;  /* allow method-style call: os:exit(code, close) */
+  if (lua_isboolean(L, first))
+    status = (lua_toboolean(L, first) ? EXIT_SUCCESS : EXIT_FAILURE);
   else
-    status = (int)luaL_optinteger(L, 1, EXIT_SUCCESS);
-  if (lua_toboolean(L, 2))
+    status = (int)luaL_optinteger(L, first, EXIT_SUCCESS);
+  if (lua_toboolean(L, first + 1))
     lua_close(L);
   if (L) exit(status);  /* 'if' to avoid warnings for unreachable 'return' */
   return 0;
+}
+
+static int os_exit_alias (lua_State *L) {
+  if (lua_gettop(L) >= 1) {
+    lua_pushvalue(L, lua_upvalueindex(1));  /* os table */
+    if (lua_rawequal(L, 1, -1))
+      lua_remove(L, 1);  /* remove implicit self from method call */
+    lua_pop(L, 1);
+  }
+  return os_exit(L);
 }
 
 
@@ -426,7 +479,13 @@ static const luaL_Reg syslib[] = {
 
 
 LUAMOD_API int luaopen_os (lua_State *L) {
+  const char *exit_alias;
   luaL_newlib(L, syslib);
+  exit_alias = locale_get(L, "aliases", "os·exit·method", "os·exit·method");
+  if (exit_alias[0] != '\0' && strcmp(exit_alias, "exit") != 0) {
+    lua_pushvalue(L, -1);  /* upvalue: os table */
+    lua_pushcclosure(L, os_exit_alias, 1);
+    lua_setfield(L, -2, exit_alias);
+  }
   return 1;
 }
-

@@ -1,0 +1,409 @@
+--[[
+Symbolic demo locale for parser/operator i18n.
+This file is mostly for demos, tests, and fun; cool in practice, not meant
+as an everyday daily-driver locale.
+
+Extended metaphors:
+  Spatial analogy:
+    🌐 = global table alias (worldwide/global scope)
+    🗺️ = global declaration keyword (map-wide binding scope)
+    🧭 = environment binding (context navigation/direction)
+    📍 = local binding marker (pinned point inside that map)
+  Pencil analogy:
+    ✏ = primary prompt (tool at rest, invitation to start writing)
+    ✎ = continuation prompt (tool in motion, line already underway)
+  Media control symbols:
+    ▶️ = execute/enter block (play/advance state)³
+    🔽 = break current loop (step downward/out)³
+    🔁 = repeat cycle (loop icon)³
+    ⏫ = return result upward (fast-up/emit)³
+    ⏭️ = goto jump (skip to next marked point)³
+  Target metaphor:
+    🎯 aliases assert: the dart is expected to reach the target.
+    🎚 aliases mode in tests: slider semantics match a selected run mode.
+    🏭 denotes factory mode: default state as a device leaving factory settings.
+    🛄 aliases arg in tests: argument table as luggage brought into runtime.
+    🗃️ aliases type: card-file-box metaphor fits classification/organized data.
+    🗂️ labels table type: indexed tabs evoke categorized key/value entries.
+    ⚙️ aliases os: operating-system toolbox namespace.
+    ⏼ aliases exit on os: universal power symbol for shutdown/termination.
+  Loop-orientation congruence:
+    clockwise marks forward/pre-check iteration flow (♺, ↻)
+    counterclockwise marks post-check termination/back-edge (↺)
+  Punctuation congruence:
+    syntagmatic separators are expressed with fleurons (☙, ❦).
+    Dot and colons are excluded: in Lua they primarily serve polymorphem
+    agglutination (field/method/token binding), not syntagm separation.
+    Straight quotes are fullwidth aliases (＂, ＇) purely to exercise
+    codepoint aliasing in demos/tests; not for new semantics.
+    Brackets are deliberately mapped to squarish forms for a shared visual
+    family across grouping, indexing, and constructor delimiters.
+  Diagnostics avoid classic letter-derived math glyphs in the domain such as ∃, ∄, ∈, ∉, π, Π, Γ, σ, Σ
+  through two main extended metaphors.
+  Painting metaphor:
+     🖌️ proposition rather than π;
+     🎨 set of all possible propositions rather than Π;
+     🖼️ frames derivation/context, rather than Γ.
+  Membership metaphor:
+     📤 is used as inclusion gesture, rather than ∈;
+     ⛔ for explicit non-membership, rather than ∉.
+  Discourse metaphor:
+    💬 symbol rather than σ;
+    💭 set of all possible symbols rather than Σ;
+    🔣 marks an explicit symbol-token focus (escape-level symbol marker).
+  Cosmologic metaphor:
+     ⚛️ atomic existence holds, rather than ∃;
+     🌌 universal existence holds, rather than ∀;
+     ⚫ no such instance in this cosmos, rather than ∄.
+  Branch-tree symbols:⁴
+    ┬ = if branch root/condition head
+    ├ = elseif branch continuation
+    └ = else fallback branch
+    │ and ┴ are decorative tree layout glyphs ignored by lexer when listed in
+    layout.ignored·glyphs.
+  Bitwise circled family:
+    bitwise ops are mapped to circled counterparts when available
+    (⊗, ⊙, ⊕, ⊝) to stay visually close to logic symbols.
+    Ideally each would be generated from its non-bitwise form via
+    U+20DD enclosing circle (e.g. ∧⃝, ∨⃝, ¬⃝), but that rendering is
+    typically awkward/inconsistent in terminal and editor fonts.
+
+Diagnostics here are intentionally theatrical:
+they parade academic symbolism with an esoteric but internally coherent
+flavor; readers are still free to treat it as abstract nonsense and enjoy
+the glyph storm.¹
+--]]
+
+locale = {
+  keywords = {
+    -- ∧ is the standard logical conjunction symbol.
+    ["conjunction·operator"] = "∧",
+    -- 🔽 acts as "break": drop out of the current iteration frame.
+    ["iteration·escape"] = "🔽",
+    -- ▶️ fits "do": it marks immediate execution/entry into a block.
+    ["block·introducer"] = "▶️",
+    -- └ draws the fallback branch in the conditional tree.
+    ["conditional·alternative"] = "└",
+    -- ├ draws intermediate alternative branches ("elseif").
+    ["conditional·alternative·protasis"] = "├",
+    -- ∎ is established as an end-of-proof/section marker, matching closure.
+    ["block·terminator"] = "∎",
+    -- ⊥ is canonical falsity in symbolic logic.
+    ["falsity·literal"] = "⊥",
+    -- ♺ keeps the cycle-arrow family used by loop keywords and avoids letters.
+    ["iteration·introducer"] = "♺",
+    -- □ marks a declaration frame, pairing visually with terminator ∎.
+    ["function·introducer"] = "□",
+    -- 🗺️ marks declarations that bind at map/world scope.
+    ["dynamic·scope·declaration"] = "🗺️",
+    -- ⏭️ maps goto to a visual "skip/jump to marker" control.
+    ["unconditional·transfer"] = "⏭️",
+    -- ┬ draws the conditional root branch ("if") in tree form.
+    ["conditional·protasis"] = "┬",
+    -- 📤 ("outbox") suggests values being yielded out of an iterator.
+    ["iteration·domain"] = "📤",
+    -- 📍 marks a local binding as a pinned in-scope point.
+    ["lexical·scope·declaration"] = "📍",
+    -- ∅ is canonical empty-set/null symbolism.
+    ["null·literal"] = "∅",
+    -- ¬ is canonical logical negation.
+    ["negation·operator"] = "¬",
+    -- ∨ is canonical logical disjunction.
+    ["disjunction·operator"] = "∨",
+    -- 🔁 is the established loop/repeat symbol.
+    ["postcondition·iteration·introducer"] = "🔁",
+    -- ⏫ conveys returning/emitting values upward to caller.
+    ["result·emission"] = "⏫",
+    -- ∴ ("therefore") marks the consequence branch after a satisfied guard.
+    ["conditional·apodosis"] = "∴",
+    -- ⊤ is canonical truth in symbolic logic.
+    ["truth·literal"] = "⊤",
+    -- ↺ marks post-check termination/back-edge for repeat...until loops.
+    ["postcondition·iteration·terminator"] = "↺",
+    -- ↻ marks pre-check looping for while-style iteration.
+    ["precondition·iteration·introducer"] = "↻",
+  },
+
+  operators = {
+    -- ← is a well-established assignment notation and the only single-glyph
+    -- assignment form that does not collide with other symbols used here.²
+    ["assignment·operator"] = "←",
+    -- ＝ uses fullwidth form to visually separate language token from ASCII.
+    ["equality·comparison"] = "＝",
+    -- ≠ is standard symbolic inequality.
+    ["inequality·comparison"] = "≠",
+    -- ≤ is standard symbolic non-strict lower bound.
+    ["inferior·ordering·comparison"] = "≤",
+    -- ≥ is standard symbolic non-strict upper bound.
+    ["superior·ordering·comparison"] = "≥",
+    -- ﹤ (U+FE64) is the compatibility small less-than form.
+    ["strict·inferior·ordering"] = "﹤",
+    -- ﹥ (U+FE65) is the compatibility small greater-than form.
+    ["strict·superior·ordering"] = "﹥",
+    -- ＋ mirrors plus while keeping symbolic/fullwidth style coherence.
+    ["addition·operator"] = "＋",
+    -- − uses the mathematical minus sign (not ASCII hyphen-minus).
+    ["subtraction·operator"] = "−",
+    -- × is canonical multiplication notation.
+    ["multiplication·operator"] = "×",
+    -- ∕ (U+2215 DIVISION SLASH) keeps floating division explicit and localized.
+    ["division·operator"] = "∕",
+    -- ÷ denotes integer/quotient division in this symbolic locale.
+    ["integer·division·operator"] = "÷",
+    -- ⁒ stays visually near percent while keeping arithmetic modulo distinct
+    -- from Lua's textual % usages (patterns, format strings, replacements).
+    -- Dismissed: two-stacked-circles-style glyph like ideas were less recognizable
+    -- than this punctuation-family compromise in typical developer contexts.
+    ["modulo·operator"] = "⁒",
+    -- ↑ denotes exponentiation as power "raised up".
+    ["exponentiation·operator"] = "↑",
+    -- ⧺ (U+29FA DOUBLE PLUS) explicitly denotes append/join composition.
+    ["concatenation·operator"] = "⧺",
+    -- … gives variadics a single-glyph ellipsis form.
+    ["variadic·expansion"] = "…",
+    -- 𐄹 (U+101B1 AEGEAN WEIGHT SECOND SUBUNIT) for cardinality: borrowed from
+    -- ancient metrology and repurposed as a "measure of magnitude" metaphor.
+    -- Considered alternatives: 📏 (ruler, literal measure) and 📐 (set square,
+    -- signaling integer result). Aegean weight was retained for its glyph density
+    -- (single codepoint), antiquarian coherence with this locale's esoteric style,
+    -- and obscurity (avoids visual ambiguity with other mathematical symbols).
+    ["cardinality·operator"] = "𐄹",
+    -- ⊗ is the circled-family counterpart chosen for bitwise conjunction.
+    ["bitwise·conjunction"] = "⊗",
+    -- ⊙ is used as the circled-family counterpart for bitwise disjunction.
+    ["bitwise·disjunction"] = "⊙",
+    -- ⊕ is widely used to denote exclusive disjunction/XOR.
+    ["bitwise·exclusive·disjunction"] = "⊕",
+    -- ⊝ is the unary circled-family counterpart for bitwise negation.
+    ["bitwise·negation"] = "⊝",
+    -- ≪ is the established left-shift notation in symbolic operator usage.
+    ["ascending·significance·shift"] = "≪",
+    -- ≫ is the established right-shift notation in symbolic operator usage.
+    ["descending·significance·shift"] = "≫",
+    -- ‐ (U+2010 HYPHEN) is the base hard-link for field/member access.
+    ["field·access·operator"] = "‐",
+    -- – (U+2013 EN DASH) marks method invocation as the extended variant.
+    ["method·invocation·operator"] = "–",
+    -- 🏷 frames goto labels with a direct tag metaphor.
+    ["label·delimiter"] = "🏷",
+  },
+
+  delimiters = {
+    -- 【】 merge square/round visual cues; kept for classic expression grouping.
+    ["expression·grouping·opening"] = "【",
+    ["expression·grouping·closing"] = "】",
+    -- ⟦⟧ align indexing with denotational-bracket semantics already in use.
+    ["index·opening"] = "⟦",
+    ["index·closing"] = "⟧",
+    -- ⁅⁆ echo dictionary-style supplemental enclosure; acceptable fit for Lua
+    -- table constructors (associative/hash structures, not pure set literals).
+    ["constructor·opening"] = "⁅",
+    ["constructor·closing"] = "⁆",
+    -- ☙ is retained as list separator because it is a documented bullet form⁵,
+    -- points back to the previous item (matching Lua's trailing-comma legality),
+    -- and avoids the leading-item semantics of `•` (Lua rejects leading commas).
+    ["element·separator"] = "☙",
+    -- ❦ is retained for statement separation: Lua allows both leading and
+    -- trailing semicolons, so a bilateral connector fits better than 𐡸.
+    -- Its waved/swung form evokes a tilde-like "soft relation", mirroring how
+    -- semicolons link independent execution blocks that remain syntactically
+    -- separate yet pragmatically related.
+    ["statement·separator"] = "❦",
+    -- Lexer inquiry outcome: short strings opened by " or ' and long strings
+    -- opened by [[...]] are distinct lexical paths, but all return TK_STRING.
+    -- Therefore we keep straight/neutral quote semantics and only swap codepoint:
+    -- Unicode offers fullwidth straight alternates (＂ U+FF02, ＇ U+FF07),
+    -- which are used here solely for thorough alias testing/demo coverage.
+    ["string·delimiter"] = "＂",
+    ["string·delimiter·alternate"] = "＇",
+  },
+
+  attributes = {
+    -- ❄️ conveys frozen/static state for immutable bindings.
+    ["immutability·attribute"] = "❄️",
+    -- 🔒 signals closing/finalization semantics through lock metaphor.
+    ["closure·attribute"] = "🔒",
+  },
+
+  types = {
+    -- 🗂️ captures "table" as a structured collection of keyed entries.
+    ["table·type·name"] = "🗂️",
+  },
+
+  lexical = {
+    ["eof·token"] = "<eof>",
+    ["number·token"] = "<number>",
+    ["integer·token"] = "<integer>",
+    ["name·token"] = "<name>",
+    ["string·token"] = "<string>",
+  },
+
+  repl = {
+    -- ✏ is a pencil at rest: inviting the first line.
+    ["primary·prompt"] = "✏ ",
+    -- ✎ is a writing pencil: continuation of an in-progress line.
+    ["continuation·prompt"] = "✎ ",
+    -- 🌕 provides a moon glyph identity for Lua.
+    ["interpreter·identity"] = "🌕",
+    -- usage symbolism notes:
+    -- 🤹 usage, ▶️ run/execute, 🔗 string/chunk, 🧩 module, 🗣 statement, 📜 script.
+    -- ➡️ then (that is "after which", in temporal fashion, in contrast with logical conditional apodosis ∴,
+    -- 🕹 interactive mode, 📽 show, 🌟 enlightening information.
+    -- 🙈 hide, 💎 pure/plain, 🛟 fallback safety-net, 🔘 enable, ⚠️ warnings.
+    -- 🛑 stop, 🎛️ options, 💉 inject/require/import, ↦ map into global binding.
+    ["usage·description"] =
+      "🤹: %s [🎛️] [📜 [🎚]]\n" ..
+      "🎛️:\n" ..
+      "  -e 🗣      ▶️🔗'🗣'\n" ..
+      "  -i        ▶️📜➡️🕹\n" ..
+      "  -l 🧩     💉🧩'🧩' ↦ 🌐'🧩'\n" ..
+      "  -l g=🧩   💉🧩'🧩' ↦ 🌐'🌐'\n" ..
+      "  -v        📽🌟\n" ..
+      "  -E        🙈🧭\n" ..
+      "  -P        💎 (¬🛟)\n" ..
+      "  -W        🔘⚠️\n" ..
+      "  --        🛑🎛️\n" ..
+      "  -         🛑🎛️▶️🎞️\n",
+    -- Playful symbolic variant with numeric identifiers:
+    -- - lua.org observed A-record history (non-exhaustive):
+    --   87.237.62.180, 148.251.24.173, 88.99.213.221, 46.175.8.47
+    --   Source: https://robtex.com/en/dns-lookup/org/lua
+    -- - 🖧 (THREE NETWORKED COMPUTERS, U+1F5A7) is expected to be among the
+    --   least well-supported glyphs in this locale set, but it is retained as
+    --   the strongest semantic match for network/IP provenance.
+    -- - PUC-Rio fiscal identity code (CNPJ): 33.555.921.0001/70
+    --   Source: http://anabranco.usuarios.rdc.puc-rio.br/portugues/arquivos/planoDeTrabalhoSME.html
+    ["version·banner"] =
+      "🌕 5.5.1  © 1994-2026 [🖧: 87.237.62.180, 148.251.24.173, " ..
+      "88.99.213.221, 46.175.8.47], 🏛️🪪33.555.921.0001/70",
+    -- ⌁ is used as an EOT/EOF-style marker in this symbolic locale.
+    ["incomplete·input·marker"] = "⌁",
+    -- 🎞️ fits interactive input as a fed stream: a reel/tape carrying symbols
+    -- into the machine, matching the classic Turing-style input-tape image.
+    ["interactive·source·identity"] = "🎞️",
+    -- ≜ marks command-line chunks as explicit definitions.
+    ["commandline·source·identity"] = "≜",
+    -- 🐞✏ combines bug context with interactive input affordance.
+    ["debug·prompt"] = "🐞✏ ",
+  },
+
+  diagnostics = {
+    -- no such thing as numeric sequence construction where the sequence is not admitted to the language set.
+    ["malformed·numeral"] = "⚠ ⚫🏭🔢(🏗️🔢∧(🔢⛔🎨))",
+    -- Formal: ∄factory(string) : construct(string) ∧ open-quote ∧ ¬close‑quote
+    -- no such with as a construct of a string with opening quote and no closing quote.
+    ["unfinished·string"] = "⚠ ⚫🏭🔗:(️🏗🔗∧📭🔣＂ ∧ ¬📪🔣＂)",
+    -- Keep syntax errors dense while avoiding letter-derived glyphs.
+    ["generic·syntax·error"] = "⚠ ⚫(🖌📤🎨) ∧ 🖼️ ⊬ ⟨…=…⟩",
+    -- Keep parser token expectation format-compatible (used with token names).
+    ["token·expected"] = "%s expected",
+    ["token·expected·to·close"] = "%s expected (to close %s at line %d)",
+    -- CLI overflow when a script gets too many args; the symbolic locale keeps
+    -- the native phrasing here until we decide on a better symbolic form.
+    ["too·many·arguments·to·script"] = "too many arguments to script",
+    ["too·many·results·to·print"] = "too many results to print",
+    ["unable·to·load·readline·library"] = "unable to load readline library '",
+    ["invalid·option·start"] = "invalid option '>'",
+    ["invalid·option·generic"] = "invalid option",
+    ["not·enough·stack"] = "not enough stack",
+    ["too·many·upvalues"] = "too many upvalues",
+    ["number·has·no·integer·representation"] = "number%s has no integer representation",
+    ["value·has·no·literal·form"] = "value has no literal form",
+    ["no·value"] = "no value",
+    ["value·out·of·range"] = "value out of range",
+    ["result·too·long"] = "result too long",
+    ["unsigned·overflow"] = "unsigned overflow",
+    ["string·longer·than·given·size"] = "string longer than given size",
+    ["string·length·does·not·fit·in·given·size"] = "string length does not fit in given size",
+    ["string·contains·zeros"] = "string contains zeros",
+    ["variable·length·format"] = "variable-length format",
+    ["format·result·too·large"] = "format result too large",
+    ["too·many·results"] = "too many results",
+    ["initial·position·out·of·string"] = "initial position out of string",
+    ["data·string·too·short"] = "data string too short",
+    ["unfinished·string·for·format·z"] = "unfinished string for format 'z'",
+    ["invalid·upvalue·index"] = "invalid upvalue index",
+    ["invalid·next·option·for·option·X"] = "invalid next option for option 'X'",
+    ["format·asks·for·alignment·not·power·of·2"] = "format asks for alignment not power of 2",
+    ["integral·size·out·of·limits"] = "integral size (%d) out of limits [1,%d]",
+    ["invalid·conversion·specifier·for·strftime"] = "invalid conversion specifier '%%%s'",
+    ["time·result·cannot·be·represented·in·this·installation"] =
+      "time result cannot be represented in this installation",
+    ["date·result·cannot·be·represented·in·this·installation"] =
+      "date result cannot be represented in this installation",
+    ["time·out·of·bounds"] = "time out-of-bounds",
+    -- Keep unexpected-symbol diagnostics explicit with non-letter symbolism.
+    ["unexpected·symbol"] = "⚠ (💬⛔💭) ∧ 🖼️ ⊬ ⟨…⇔…⟩",
+    -- ☯ here as "we expect harmony in complementary construction" that yin/yang symbolize perfectly.
+    ["lua·function·expected"] = "🌕□☯",
+  },
+
+  internals = {
+    -- Internal names can leak into errors or external APIs; keep them local
+    -- here until a dedicated symbolic mapping is worth the churn.
+    ["init·environment·variable"] = "LUA_INIT",
+    ["locale·environment·variable"] = "LUA_LOCALE",
+    ["readline·library·environment·variable"] = "LUA_READLINELIB",
+    ["locale·table·registry·key"] = "LUA_LOCALE_TABLE",
+    ["base·locale·table·registry·key"] = "LUA_BASE_LOCALE_TABLE",
+    ["no·environment·registry·flag"] = "LUA_NOENV",
+    ["plain·locale·registry·flag"] = "LUA_PLAINLOCALE",
+    -- 🧭 continues the spatial metaphor for current lexical environment.
+    ["environment·identifier"] = "🧭",
+    -- 🌐 marks globally shared namespace.
+    ["global·table·identifier"] = "🌐",
+    -- 🪞 suggests reflective self-reference for method receiver.
+    ["implicit·self·parameter"] = "🪞",
+  },
+
+  aliases = {
+    -- Runtime-consumed alias keys (used by i18n C wiring):
+    ["assert·function·alias"] = "🎯",
+    ["arg·table·alias"] = "🎚",
+    ["type·function·alias"] = "🗃️",
+    -- ⚙️ maps the OS library to a toolbox-like system namespace symbol.
+    ["os·library·identifier"] = "⚙️",
+    ["debug·library·identifier"] = "🐞",
+    ["string·library·identifier"] = "🔤",
+    -- ⏼ maps os.exit to the universal power/stop semantic.
+    ["os·exit·method"] = "⏼",
+    ["rawget·function·alias"] = "⟼",
+    ["rawset·function·alias"] = "⟻",
+    ["getmetatable·function·alias"] = "⇸",
+    ["setmetatable·function·alias"] = "⇷",
+    ["load·function·alias"] = "🪤",
+    ["error·function·alias"] = "💥",
+    ["print·function·alias"] = "🖨",
+    ["ipairs·function·alias"] = "📚",
+    ["select·function·alias"] = "🎛",
+    ["os·getenv·method·alias"] = "↗",
+    ["os·setlocale·method·alias"] = "↙",
+    ["io·setvbuf·method·alias"] = "↧",
+    ["string·find·method·alias"] = "🔎",
+    ["debug·gethook·method·alias"] = "↪",
+    ["debug·sethook·method·alias"] = "↩",
+    ["debug·getlocal·method·alias"] = "⇢",
+    ["debug·setlocal·method·alias"] = "⇠",
+    ["debug·getupvalue·method·alias"] = "↠",
+    ["debug·setupvalue·method·alias"] = "↞",
+    ["debug·getregistry·method·alias"] = "⇾",
+    ["debug·getinfo·method·alias"] = "⇨",
+  },
+
+  layout = {
+    -- Decorative branch-tree connectors accepted as ignorable layout glyphs.
+    -- That’s what allow to make conditional statement with multiline intermediary statement bodies still look like a
+    -- connected tree visually similar to Frege’s Begriffsschrift⁶.
+    ["ignored·glyphs"] = { "│", "┴" },
+  },
+}
+
+
+
+-- # References
+-- ¹ https://en.wikipedia.org/wiki/Abstract_nonsense
+-- ² https://en.wikipedia.org/wiki/Assignment_(computer_science)#Notation
+-- ³ https://en.wikipedia.org/wiki/Media_controls
+-- ⁴ https://en.wikipedia.org/wiki/Begriffsschrift
+-- ⁵ https://en.wikipedia.org/wiki/Bullet_(typography)#In_Unicode
+-- ⁶ https://en.wikipedia.org/wiki/Begriffsschrift

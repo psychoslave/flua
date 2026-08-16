@@ -9433,6 +9433,7 @@ The options are:
   result to global @rep{g};}
 @item{@T{-v}| print version information;}
 @item{@T{-E}| ignore environment variables;}
+@item{@T{-P}| plain locale mode (disable base-locale fallback aliases);}
 @item{@T{-W}| turn warnings on;}
 @item{@T{--}| stop handling options;}
 @item{@T{-}| execute @id{stdin} as a file and stop handling options.}
@@ -9452,6 +9453,11 @@ If the variable content has the format @T{@At@rep{filename}},
 then @id{lua} executes the file.
 Otherwise, @id{lua} executes the string itself.
 
+The interpreter also checks @defid{LUA_LOCALE}
+to select the active runtime locale table.
+If this variable is absent or empty,
+the interpreter uses its compiled default locale.
+
 When called with the option @T{-E},
 Lua does not consult any environment variables.
 In particular,
@@ -9461,6 +9467,10 @@ To signal to the libraries that this option is on,
 the stand-alone interpreter sets the field
 @idx{"LUA_NOENV"} in the registry to a true value.
 Other libraries may consult this field for the same purpose.
+
+With option @T{-P},
+locale symbol resolution runs in plain mode,
+which disables fallback alias resolution from the base locale.
 
 The options @T{-e}, @T{-l}, and @T{-W} are handled in
 the order they appear.

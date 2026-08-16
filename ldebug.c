@@ -36,6 +36,33 @@
 static const char strlocal[] = "local";
 static const char strupval[] = "upvalue";
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
+  lua_settop(L, top);
+  return out;
+}
+
 static const char *funcnamefromcall (lua_State *L, CallInfo *ci,
                                                    const char **name);
 
@@ -714,10 +741,32 @@ static const char *getupvalname (CallInfo *ci, const TValue *o,
 
 static const char *formatvarinfo (lua_State *L, const char *kind,
                                                 const char *name) {
+  const char *localized_kind = kind;
+  if (kind != NULL) {
+    if (strcmp(kind, "local") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·local", kind);
+    else if (strcmp(kind, "upvalue") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·upvalue", kind);
+    else if (strcmp(kind, "global") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·global", kind);
+    else if (strcmp(kind, "field") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·field", kind);
+    else if (strcmp(kind, "method") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·method", kind);
+    else if (strcmp(kind, "constant") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·constant", kind);
+    else if (strcmp(kind, "for iterator") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·for·iterator", kind);
+    else if (strcmp(kind, "metamethod") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·metamethod", kind);
+    else if (strcmp(kind, "hook") == 0)
+      localized_kind = locale_get(L, "diagnostics", "varinfo·kind·hook", kind);
+  }
   if (kind == NULL)
     return "";  /* no information */
   else
-    return luaO_pushfstring(L, " (%s '%s')", kind, name);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "varinfo·kind·name", " (%s '%s')"),
+                            localized_kind, name);
 }
 
 /*
@@ -746,7 +795,22 @@ static const char *varinfo (lua_State *L, const TValue *o) {
 static l_noret typeerror (lua_State *L, const TValue *o, const char *op,
                           const char *extra) {
   const char *t = luaT_objtypename(L, o);
-  luaG_runerror(L, "attempt to %s a %s value%s", op, t, extra);
+  const char *localized_op = op;
+  if (strcmp(op, "call") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·call", op);
+  else if (strcmp(op, "concatenate") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·concatenate", op);
+  else if (strcmp(op, "get length of") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·get·length·of", op);
+  else if (strcmp(op, "index") == 0)
+    localized_op = locale_get(L, "diagnostics", "operation·index", op);
+  else if (strcmp(op, "perform arithmetic on") == 0)
+    localized_op = locale_get(L, "diagnostics",
+                              "operation·perform·arithmetic·on", op);
+  else if (strcmp(op, "perform bitwise operation on") == 0)
+    localized_op = locale_get(L, "diagnostics",
+                              "operation·perform·bitwise·operation·on", op);
+  luaG_runerror(L, "attempt to %s a %s value%s", localized_op, t, extra);
 }
 
 
@@ -826,13 +890,15 @@ l_noret luaG_errnnil (lua_State *L, LClosure *cl, int k) {
 const char *luaG_addinfo (lua_State *L, const char *msg, TString *src,
                                         int line) {
   if (src == NULL)  /* no debug information? */
-    return luaO_pushfstring(L, "?:?: %s", msg);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "unknown·source·line·message", "unknown·source·line·message"),
+                            msg);
   else {
     char buff[LUA_IDSIZE];
     size_t idlen;
     const char *id = getlstr(src, idlen);
     luaO_chunkid(buff, id, idlen);
-    return luaO_pushfstring(L, "%s:%d: %s", buff, line, msg);
+    return luaO_pushfstring(L, locale_get(L, "diagnostics", "source·line·message", "source·line·message"),
+                            buff, line, msg);
   }
 }
 
@@ -858,6 +924,61 @@ l_noret luaG_runerror (lua_State *L, const char *fmt, ...) {
   CallInfo *ci = L->ci;
   const char *msg;
   va_list argp;
+  if (strcmp(fmt, "stack overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "stack·overflow", fmt);
+  else if (strcmp(fmt, "'__call' chain too long") == 0)
+    fmt = locale_get(L, "diagnostics", "call·chain·too·long", fmt);
+  else if (strcmp(fmt, "attempt to yield across a C-call boundary") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "attempt·yield·across·ccall·boundary", fmt);
+  else if (strcmp(fmt, "attempt to yield from outside a coroutine") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "attempt·yield·outside·coroutine", fmt);
+  else if (strcmp(fmt, "vararg table has no proper 'n'") == 0)
+    fmt = locale_get(L, "diagnostics", "vararg·table·no·proper·n", fmt);
+  else if (strcmp(fmt, "invalid key to 'next'") == 0)
+    fmt = locale_get(L, "diagnostics", "invalid·key·to·next", fmt);
+  else if (strcmp(fmt, "table overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "table·overflow", fmt);
+  else if (strcmp(fmt, "table index is nil") == 0)
+    fmt = locale_get(L, "diagnostics", "table·index·is·nil", fmt);
+  else if (strcmp(fmt, "table index is NaN") == 0)
+    fmt = locale_get(L, "diagnostics", "table·index·is·nan", fmt);
+  else if (strcmp(fmt, "variable '%s' got a non-closable value") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "variable·got·nonclosable·value", fmt);
+  else if (strcmp(fmt, "C stack overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "c·stack·overflow", fmt);
+  else if (strcmp(fmt, "too many %s (limit is %d)") == 0)
+    fmt = locale_get(L, "diagnostics", "too·many·elements·limit", fmt);
+  else if (strcmp(fmt, "memory allocation error: block too big") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "memory·allocation·error·block·too·big", fmt);
+  else if (strcmp(fmt, "'for' step is zero") == 0)
+    fmt = locale_get(L, "diagnostics", "for·step·is·zero", fmt);
+  else if (strcmp(fmt, "'__index' chain too long; possible loop") == 0)
+    fmt = locale_get(L, "diagnostics", "index·chain·too·long", fmt);
+  else if (strcmp(fmt, "'__newindex' chain too long; possible loop") == 0)
+    fmt = locale_get(L, "diagnostics", "newindex·chain·too·long", fmt);
+  else if (strcmp(fmt, "string length overflow") == 0)
+    fmt = locale_get(L, "diagnostics", "string·length·overflow", fmt);
+  else if (strcmp(fmt, "attempt to divide by zero") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·divide·by·zero", fmt);
+  else if (strcmp(fmt, "attempt to perform 'n%%0'") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·perform·nmod0", fmt);
+  else if (strcmp(fmt, "attempt to %s a %s value%s") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·to·op·a·value", fmt);
+  else if (strcmp(fmt, "bad 'for' %s (number expected, got %s)") == 0)
+    fmt = locale_get(L, "diagnostics", "bad·for·number·expected", fmt);
+  else if (strcmp(fmt, "number%s has no integer representation") == 0)
+    fmt = locale_get(L, "diagnostics",
+                     "number·has·no·integer·representation", fmt);
+  else if (strcmp(fmt, "attempt to compare two %s values") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·compare·two·values", fmt);
+  else if (strcmp(fmt, "attempt to compare %s with %s") == 0)
+    fmt = locale_get(L, "diagnostics", "attempt·compare·with", fmt);
+  else if (strcmp(fmt, "global '%s' already defined") == 0)
+    fmt = locale_get(L, "diagnostics", "global·already·defined", fmt);
   luaC_checkGC(L);  /* error message uses memory */
   pushvfstring(L, argp, fmt, msg);
   if (isLua(ci)) {  /* Lua function? */
@@ -976,4 +1097,3 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
   }
   return 1;  /* keep 'trap' on */
 }
-

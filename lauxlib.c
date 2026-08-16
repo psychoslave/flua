@@ -27,6 +27,37 @@
 #include "lauxlib.h"
 #include "llimits.h"
 
+static const char *locale_get (lua_State *L,
+                               const char *section,
+                               const char *key,
+                               const char *fallback) {
+  const char *out = fallback;
+  int top = lua_gettop(L);
+  if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_LOCALE_TABLE") == LUA_TTABLE &&
+      lua_getfield(L, -1, section) == LUA_TTABLE &&
+      lua_getfield(L, -1, key) == LUA_TSTRING) {
+    const char *s = lua_tostring(L, -1);
+    if (s != NULL && s[0] != '\0')
+      out = s;
+  }
+  else {
+    lua_settop(L, top);
+    if (lua_getfield(L, LUA_REGISTRYINDEX, "LUA_BASE_LOCALE_TABLE") == LUA_TTABLE &&
+        lua_getfield(L, -1, section) == LUA_TTABLE &&
+        lua_getfield(L, -1, key) == LUA_TSTRING) {
+      const char *s = lua_tostring(L, -1);
+      if (s != NULL && s[0] != '\0')
+        out = s;
+    }
+  }
+  lua_settop(L, top);
+  return out;
+}
+
+static const char *locale_global_name (lua_State *L) {
+  return locale_get(L, "internals", "global·table·identifier", LUA_GNAME);
+}
+
 
 /*
 ** {======================================================
@@ -56,7 +87,7 @@ static int findfield (lua_State *L, int objidx, int level) {
       }
       else if (findfield(L, objidx, level - 1)) {  /* try recursively */
         /* stack: lib_name, lib_table, field_name (top) */
-        lua_pushliteral(L, ".");  /* place '.' between the two names */
+        lua_pushstring(L, locale_get(L, "operators", "field·access·operator", "."));  /* place field access operator between the two names */
         lua_replace(L, -3);  /* (in the slot occupied by table) */
         lua_concat(L, 3);  /* lib_name.field_name */
         return 1;
@@ -73,13 +104,21 @@ static int findfield (lua_State *L, int objidx, int level) {
 */
 static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   int top = lua_gettop(L);
+  const char *gname = locale_global_name(L);
+  size_t glen = strlen(gname);
   lua_getinfo(L, "f", ar);  /* push function */
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
-  luaL_checkstack(L, 6, "not enough stack");  /* slots for 'findfield' */
+  luaL_checkstack(L, 6,
+    locale_get(L, "diagnostics", "not·enough·stack", "not enough stack"));  /* slots for 'findfield' */
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
-    if (strncmp(name, LUA_GNAME ".", 3) == 0) {  /* name start with '_G.'? */
-      lua_pushstring(L, name + 3);  /* push name without prefix */
+    if (strncmp(name, gname, glen) == 0 && name[glen] == '.') {
+      lua_pushstring(L, name + glen + 1);  /* name without localized prefix */
+      lua_remove(L, -2);  /* remove original name */
+    }
+    else if (strcmp(gname, LUA_GNAME) != 0 &&
+             strncmp(name, LUA_GNAME ".", 3) == 0) {
+      lua_pushstring(L, name + 3);  /* name without native fallback prefix */
       lua_remove(L, -2);  /* remove original name */
     }
     lua_copy(L, -1, top + 1);  /* copy name to proper place */
@@ -94,18 +133,36 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
 
 
 static void pushfuncname (lua_State *L, lua_Debug *ar) {
-  if (*ar->namewhat != '\0')  /* is there a name from code? */
-    lua_pushfstring(L, "%s '%s'", ar->namewhat, ar->name);  /* use it */
+  if (*ar->namewhat != '\0') {  /* is there a name from code? */
+    const char *localized_what = ar->namewhat;
+    if (strcmp(ar->namewhat, "field") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·field", ar->namewhat);
+    else if (strcmp(ar->namewhat, "method") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·method", ar->namewhat);
+    else if (strcmp(ar->namewhat, "global") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·global", ar->namewhat);
+    else if (strcmp(ar->namewhat, "local") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·local", ar->namewhat);
+    else if (strcmp(ar->namewhat, "upvalue") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·upvalue", ar->namewhat);
+    else if (strcmp(ar->namewhat, "constant") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·constant", ar->namewhat);
+    else if (strcmp(ar->namewhat, "metamethod") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·metamethod", ar->namewhat);
+    else if (strcmp(ar->namewhat, "hook") == 0)
+      localized_what = locale_get(L, "diagnostics", "varinfo·kind·hook", ar->namewhat);
+    lua_pushfstring(L, "%s '%s'", localized_what, ar->name);
+  }
   else if (*ar->what == 'm')  /* main? */
-      lua_pushliteral(L, "main chunk");
+      lua_pushstring(L, locale_get(L, "diagnostics", "main·chunk·identity", "main·chunk·identity"));
   else if (pushglobalfuncname(L, ar)) {  /* try a global name */
-    lua_pushfstring(L, "function '%s'", lua_tostring(L, -1));
+    lua_pushfstring(L, locale_get(L, "diagnostics", "traceback·function·name·format", "function '%s'"), lua_tostring(L, -1));
     lua_remove(L, -2);  /* remove name */
   }
   else if (*ar->what != 'C')  /* for Lua functions, use <file:line> */
-    lua_pushfstring(L, "function <%s:%d>", ar->short_src, ar->linedefined);
+    lua_pushfstring(L, locale_get(L, "diagnostics", "traceback·function·source·format", "function <%s:%d>"), ar->short_src, ar->linedefined);
   else  /* nothing left... */
-    lua_pushliteral(L, "?");
+    lua_pushstring(L, locale_get(L, "diagnostics", "traceback·unknown·function", "?"));
 }
 
 
@@ -135,7 +192,7 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
     luaL_addstring(&b, msg);
     luaL_addchar(&b, '\n');
   }
-  luaL_addstring(&b, "stack traceback:");
+  luaL_addstring(&b, locale_get(L, "diagnostics", "stack·traceback·header", "stack·traceback·header"));
   while (lua_getstack(L1, level++, &ar)) {
     if (limit2show-- == 0) {  /* too many levels? */
       int n = last - level - LEVELS2 + 1;  /* number of levels to skip */
@@ -145,10 +202,14 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
     }
     else {
       lua_getinfo(L1, "Slnt", &ar);
-      if (ar.currentline <= 0)
-        lua_pushfstring(L, "\n\t%s: in ", ar.short_src);
-      else
-        lua_pushfstring(L, "\n\t%s:%d: in ", ar.short_src, ar.currentline);
+      if (ar.currentline <= 0) {
+        const char *fmt = locale_get(L, "diagnostics", "traceback·line·format·no·line", "\n\t%s: in ");
+        lua_pushfstring(L, fmt, ar.short_src);
+      }
+      else {
+        const char *fmt = locale_get(L, "diagnostics", "traceback·line·format·with·line", "\n\t%s:%d: in ");
+        lua_pushfstring(L, fmt, ar.short_src, ar.currentline);
+      }
       luaL_addvalue(&b);
       pushfuncname(L, &ar);
       luaL_addvalue(&b);
@@ -171,25 +232,26 @@ LUALIB_API void luaL_traceback (lua_State *L, lua_State *L1,
 LUALIB_API int luaL_argerror (lua_State *L, int arg, const char *extramsg) {
   lua_Debug ar;
   const char *argword;
+  const char *badargfmt = locale_get(L, "diagnostics", "bad·argument", "bad·argument");
   if (!lua_getstack(L, 0, &ar))  /* no stack frame? */
-    return luaL_error(L, "bad argument #%d (%s)", arg, extramsg);
+    return luaL_error(L, badargfmt, arg, extramsg);
   lua_getinfo(L, "nt", &ar);
   if (arg <= ar.extraargs)  /* error in an extra argument? */
-    argword =  "extra argument";
+    argword = locale_get(L, "diagnostics", "extra·argument", "extra·argument");
   else {
     arg -= ar.extraargs;  /* do not count extra arguments */
     if (strcmp(ar.namewhat, "method") == 0) {  /* colon syntax? */
       arg--;  /* do not count (extra) self argument */
       if (arg == 0)  /* error in self argument? */
-        return luaL_error(L, "calling '%s' on bad self (%s)",
-                               ar.name, extramsg);
+        return luaL_error(L, locale_get(L, "diagnostics", "calling·on·bad·self", "calling·on·bad·self"),
+                              ar.name, extramsg);
       /* else go through; error in a regular argument */
     }
-    argword = "argument";
+    argword = locale_get(L, "diagnostics", "argument", "argument");
   }
   if (ar.name == NULL)
     ar.name = (pushglobalfuncname(L, &ar)) ? lua_tostring(L, -1) : "?";
-  return luaL_error(L, "bad %s #%d to '%s' (%s)",
+  return luaL_error(L, locale_get(L, "diagnostics", "bad·named·argument·to", "bad·named·argument·to"),
                        argword, arg, ar.name, extramsg);
 }
 
@@ -200,10 +262,10 @@ LUALIB_API int luaL_typeerror (lua_State *L, int arg, const char *tname) {
   if (luaL_getmetafield(L, arg, "__name") == LUA_TSTRING)
     typearg = lua_tostring(L, -1);  /* use the given type name */
   else if (lua_type(L, arg) == LUA_TLIGHTUSERDATA)
-    typearg = "light userdata";  /* special name for messages */
+    typearg = locale_get(L, "diagnostics", "light·userdata·type·name", "light·userdata·type·name");
   else
     typearg = luaL_typename(L, arg);  /* standard name */
-  msg = lua_pushfstring(L, "%s expected, got %s", tname, typearg);
+  msg = lua_pushfstring(L, locale_get(L, "diagnostics", "type·expected·got", "type·expected·got"), tname, typearg);
   return luaL_argerror(L, arg, msg);
 }
 
@@ -230,6 +292,121 @@ LUALIB_API void luaL_where (lua_State *L, int level) {
 }
 
 
+static const char *laux_localize_error_fmt (lua_State *L, const char *fmt) {
+  if (strcmp(fmt, "cannot close a %s coroutine") == 0)
+    return locale_get(L, "diagnostics", "cannot·close·coroutine", fmt);
+  if (strcmp(fmt, "cannot close main thread") == 0)
+    return locale_get(L, "diagnostics", "cannot·close·main·thread", fmt);
+  if (strcmp(fmt, "unable to get ModuleFileName") == 0)
+    return locale_get(L, "diagnostics", "unable·to·get·module·filename", fmt);
+  if (strcmp(fmt, "'package.%s' must be a string") == 0)
+    return locale_get(L, "diagnostics", "package·field·must·be·string", fmt);
+  if (strcmp(fmt, "error loading module '%s' from file '%s':\n\t%s") == 0)
+    return locale_get(L, "diagnostics",
+                      "error·loading·module·from·file", fmt);
+  if (strcmp(fmt, "'package.searchers' must be a table") == 0)
+    return locale_get(L, "diagnostics",
+                      "package·searchers·must·be·table", fmt);
+  if (strcmp(fmt, "module '%s' not found:%s") == 0)
+    return locale_get(L, "diagnostics", "module·not·found", fmt);
+  if (strcmp(fmt, "stack overflow") == 0)
+    return locale_get(L, "diagnostics", "stack·overflow", fmt);
+  if (strcmp(fmt, "'popen' not supported") == 0)
+    return locale_get(L, "diagnostics", "popen·not·supported", fmt);
+  if (strcmp(fmt, "attempt to use a closed file") == 0)
+    return locale_get(L, "diagnostics", "attempt·to·use·closed·file", fmt);
+  if (strcmp(fmt, "cannot open file '%s' (%s)") == 0)
+    return locale_get(L, "diagnostics", "cannot·open·file", fmt);
+  if (strcmp(fmt, "default %s file is closed") == 0)
+    return locale_get(L, "diagnostics", "default·file·is·closed", fmt);
+  if (strcmp(fmt, "file is already closed") == 0)
+    return locale_get(L, "diagnostics", "file·already·closed", fmt);
+  if (strcmp(fmt, "unable to generate a unique filename") == 0)
+    return locale_get(L, "diagnostics",
+                      "unable·to·generate·unique·filename", fmt);
+  if (strcmp(fmt, "field '%s' is out-of-bound") == 0)
+    return locale_get(L, "diagnostics", "field·out·of·bound", fmt);
+  if (strcmp(fmt, "field '%s' is not an integer") == 0)
+    return locale_get(L, "diagnostics", "field·not·integer", fmt);
+  if (strcmp(fmt, "field '%s' missing in date table") == 0)
+    return locale_get(L, "diagnostics", "field·missing·in·date·table", fmt);
+  if (strcmp(fmt, "cannot change a protected metatable") == 0)
+    return locale_get(L, "diagnostics",
+                      "cannot·change·protected·metatable", fmt);
+  if (strcmp(fmt, "reader function must return a string") == 0)
+    return locale_get(L, "diagnostics",
+                      "reader·function·must·return·string", fmt);
+  if (strcmp(fmt, "wrong number of arguments to 'insert'") == 0)
+    return locale_get(L, "diagnostics",
+                      "wrong·number·of·arguments·to·insert", fmt);
+  if (strcmp(fmt, "invalid value (%s) at index %I in table for 'concat'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·value·at·index·for·concat", fmt);
+  if (strcmp(fmt, "too many results to unpack") == 0)
+    return locale_get(L, "diagnostics", "too·many·results·to·unpack", fmt);
+  if (strcmp(fmt, "invalid order function for sorting") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·order·function·for·sorting", fmt);
+  if (strcmp(fmt, "wrong number of arguments") == 0)
+    return locale_get(L, "diagnostics", "wrong·number·of·arguments", fmt);
+  if (strcmp(fmt, "string slice too long") == 0)
+    return locale_get(L, "diagnostics", "string·slice·too·long", fmt);
+  if (strcmp(fmt, "initial position is a continuation byte") == 0)
+    return locale_get(L, "diagnostics",
+                      "initial·position·continuation·byte", fmt);
+  if (strcmp(fmt, "resulting string too large") == 0)
+    return locale_get(L, "diagnostics", "resulting·string·too·large", fmt);
+  if (strcmp(fmt, "attempt to %s a '%s' with a '%s'") == 0)
+    return locale_get(L, "diagnostics", "attempt·op·string·with·string", fmt);
+  if (strcmp(fmt, "invalid capture index %%%d") == 0)
+    return locale_get(L, "diagnostics", "invalid·capture·index", fmt);
+  if (strcmp(fmt, "invalid pattern capture") == 0)
+    return locale_get(L, "diagnostics", "invalid·pattern·capture", fmt);
+  if (strcmp(fmt, "malformed pattern (ends with '%%')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·ends·with·percent", fmt);
+  if (strcmp(fmt, "malformed pattern (missing ']')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·missing·closing·bracket", fmt);
+  if (strcmp(fmt, "malformed pattern (missing arguments to '%%b')") == 0)
+    return locale_get(L, "diagnostics", "malformed·pattern·missing·percentb·args", fmt);
+  if (strcmp(fmt, "too many captures") == 0)
+    return locale_get(L, "diagnostics", "too·many·captures", fmt);
+  if (strcmp(fmt, "pattern too complex") == 0)
+    return locale_get(L, "diagnostics", "pattern·too·complex", fmt);
+  if (strcmp(fmt, "missing '[' after '%%f' in pattern") == 0)
+    return locale_get(L, "diagnostics", "missing·bracket·after·percentf", fmt);
+  if (strcmp(fmt, "unfinished capture") == 0)
+    return locale_get(L, "diagnostics", "unfinished·capture", fmt);
+  if (strcmp(fmt, "invalid use of '%c' in replacement string") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·use·in·replacement·string", fmt);
+  if (strcmp(fmt, "invalid replacement value (a %s)") == 0)
+    return locale_get(L, "diagnostics", "invalid·replacement·value", fmt);
+  if (strcmp(fmt, "modifiers for format '%%a'/'%%A' not implemented") == 0)
+    return locale_get(L, "diagnostics",
+                      "modifiers·for·percenta·not·implemented", fmt);
+  if (strcmp(fmt, "invalid conversion specification: '%s'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·conversion·specification", fmt);
+  if (strcmp(fmt, "invalid format (too long)") == 0)
+    return locale_get(L, "diagnostics", "invalid·format·too·long", fmt);
+  if (strcmp(fmt, "specifier '%%q' cannot have modifiers") == 0)
+    return locale_get(L, "diagnostics",
+                      "specifier·percentq·cannot·have·modifiers", fmt);
+  if (strcmp(fmt, "invalid conversion '%s' to 'format'") == 0)
+    return locale_get(L, "diagnostics",
+                      "invalid·conversion·to·format", fmt);
+  if (strcmp(fmt, "missing size for format option 'c'") == 0)
+    return locale_get(L, "diagnostics",
+                      "missing·size·for·format·option·c", fmt);
+  if (strcmp(fmt, "invalid format option '%c'") == 0)
+    return locale_get(L, "diagnostics", "invalid·format·option", fmt);
+  if (strcmp(fmt, "%d-byte integer does not fit into Lua Integer") == 0)
+    return locale_get(L, "diagnostics",
+                      "byte·integer·does·not·fit·lua·integer", fmt);
+  return fmt;
+}
+
+
 /*
 ** Again, the use of 'lua_pushvfstring' ensures this function does
 ** not need reserved stack space when called. (At worst, it generates
@@ -237,6 +414,7 @@ LUALIB_API void luaL_where (lua_State *L, int level) {
 */
 LUALIB_API int luaL_error (lua_State *L, const char *fmt, ...) {
   va_list argp;
+  fmt = laux_localize_error_fmt(L, fmt);
   va_start(argp, fmt);
   luaL_where(L, 1);
   lua_pushvfstring(L, fmt, argp);
@@ -254,10 +432,12 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
   }
   else {
     const char *msg;
+    const char *nofmt = locale_get(L, "diagnostics", "file·error·no·extra·info", "file·error·no·extra·info");
+    const char *pathfmt = locale_get(L, "diagnostics", "file·error·with·path", "file·error·with·path");
     luaL_pushfail(L);
-    msg = (en != 0) ? strerror(en) : "(no extra info)";
+    msg = (en != 0) ? strerror(en) : nofmt;
     if (fname)
-      lua_pushfstring(L, "%s: %s", fname, msg);
+      lua_pushfstring(L, pathfmt, fname, msg);
     else
       lua_pushstring(L, msg);
     lua_pushinteger(L, en);
@@ -372,7 +552,7 @@ LUALIB_API int luaL_checkoption (lua_State *L, int arg, const char *def,
     if (strcmp(lst[i], name) == 0)
       return i;
   return luaL_argerror(L, arg,
-                       lua_pushfstring(L, "invalid option '%s'", name));
+                       lua_pushfstring(L, locale_get(L, "diagnostics", "invalid·option", "invalid·option"), name));
 }
 
 
@@ -386,9 +566,9 @@ LUALIB_API int luaL_checkoption (lua_State *L, int arg, const char *def,
 LUALIB_API void luaL_checkstack (lua_State *L, int space, const char *msg) {
   if (l_unlikely(!lua_checkstack(L, space))) {
     if (msg)
-      luaL_error(L, "stack overflow (%s)", msg);
+      luaL_error(L, locale_get(L, "diagnostics", "stack·overflow·with·context", "stack·overflow·with·context"), msg);
     else
-      luaL_error(L, "stack overflow");
+      luaL_error(L, locale_get(L, "diagnostics", "stack·overflow", "stack·overflow"));
   }
 }
 
@@ -401,7 +581,7 @@ LUALIB_API void luaL_checktype (lua_State *L, int arg, int t) {
 
 LUALIB_API void luaL_checkany (lua_State *L, int arg) {
   if (l_unlikely(lua_type(L, arg) == LUA_TNONE))
-    luaL_argerror(L, arg, "value expected");
+    luaL_argerror(L, arg, locale_get(L, "diagnostics", "value·expected", "value·expected"));
 }
 
 
@@ -439,7 +619,9 @@ LUALIB_API lua_Number luaL_optnumber (lua_State *L, int arg, lua_Number def) {
 
 static void interror (lua_State *L, int arg) {
   if (lua_isnumber(L, arg))
-    luaL_argerror(L, arg, "number has no integer representation");
+    luaL_argerror(L, arg,
+      locale_get(L, "diagnostics", "number·has·no·integer·representation",
+                 "number has no integer representation"));
   else
     tag_error(L, arg, LUA_TNUMBER);
 }
@@ -490,7 +672,7 @@ static void *resizebox (lua_State *L, int idx, size_t newsize) {
     lua_Alloc allocf = lua_getallocf(L, &ud);
     void *temp = allocf(ud, box->box, box->bsize, newsize);
     if (l_unlikely(temp == NULL && newsize > 0)) {  /* allocation error? */
-      lua_pushliteral(L, "not enough memory");
+      lua_pushstring(L, locale_get(L, "diagnostics", "not·enough·memory", "not·enough·memory"));
       lua_error(L);  /* raise a memory error */
     }
     box->box = temp;
@@ -559,7 +741,8 @@ static void newbox (lua_State *L) {
 static size_t newbuffsize (luaL_Buffer *B, size_t sz) {
   size_t newsize = B->size;
   if (l_unlikely(sz >= MAX_SIZE - B->n))
-    return cast_sizet(luaL_error(B->L, "resulting string too large"));
+    return cast_sizet(luaL_error(B->L, "%s",
+      locale_get(B->L, "diagnostics", "resulting·string·too·large", "resulting·string·too·large")));
   /* else  B->n + sz + 1 <= MAX_SIZE */
   if (newsize <= MAX_SIZE/3 * 2)  /* no overflow? */
     newsize += (newsize >> 1);  /* new size *= 1.5 */
@@ -757,7 +940,12 @@ static const char *getF (lua_State *L, void *ud, size_t *size) {
   LoadF *lf = (LoadF *)ud;
   UNUSED(L);
   if (lf->n > 0) {  /* are there pre-read characters to be read? */
-    *size = lf->n;  /* return them (chars already in buffer) */
+    size_t pre = lf->n;
+    /* Return pre-read bytes together with fresh bytes so multi-byte locale
+       tokens at chunk start are not artificially split across reads. */
+    if (pre < sizeof(lf->buff))
+      pre += fread(lf->buff + pre, 1, sizeof(lf->buff) - pre, lf->f);
+    *size = pre;
     lf->n = 0;  /* no more pre-read characters */
   }
   else {  /* read a block from file */
@@ -774,10 +962,12 @@ static const char *getF (lua_State *L, void *ud, size_t *size) {
 static int errfile (lua_State *L, const char *what, int fnameindex) {
   int err = errno;
   const char *filename = lua_tostring(L, fnameindex) + 1;
+  const char *fmt_with_reason = locale_get(L, "diagnostics", "cannot·operation·file·with·reason", "cannot·operation·file·with·reason");
+  const char *fmt_plain = locale_get(L, "diagnostics", "cannot·operation·file", "cannot·operation·file");
   if (err != 0)
-    lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(err));
+    lua_pushfstring(L, fmt_with_reason, what, filename, strerror(err));
   else
-    lua_pushfstring(L, "cannot %s %s", what, filename);
+    lua_pushfstring(L, fmt_plain, what, filename);
   lua_remove(L, fnameindex);
   return LUA_ERRFILE;
 }
@@ -825,7 +1015,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   int c;
   int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
   if (filename == NULL) {
-    lua_pushliteral(L, "=stdin");
+    lua_pushstring(L, locale_get(L, "repl", "stdin·source·identity", "=stdin"));
     lf.f = stdin;
   }
   else {
@@ -926,7 +1116,7 @@ LUALIB_API lua_Integer luaL_len (lua_State *L, int idx) {
   lua_len(L, idx);
   l = lua_tointegerx(L, -1, &isnum);
   if (l_unlikely(!isnum))
-    luaL_error(L, "object length is not an integer");
+    luaL_error(L, "%s", locale_get(L, "diagnostics", "object·length·not·integer", "object·length·not·integer"));
   lua_pop(L, 1);  /* remove object */
   return l;
 }
@@ -936,7 +1126,7 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
   idx = lua_absindex(L,idx);
   if (luaL_callmeta(L, idx, "__tostring")) {  /* metafield? */
     if (!lua_isstring(L, -1))
-      luaL_error(L, "'__tostring' must return a string");
+      luaL_error(L, "%s", locale_get(L, "diagnostics", "metamethod·tostring·must·return·string", "metamethod·tostring·must·return·string"));
   }
   else {
     switch (lua_type(L, idx)) {
@@ -950,10 +1140,12 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
         lua_pushvalue(L, idx);
         break;
       case LUA_TBOOLEAN:
-        lua_pushstring(L, (lua_toboolean(L, idx) ? "true" : "false"));
+        lua_pushstring(L, lua_toboolean(L, idx)
+            ? locale_get(L, "keywords", "truth·literal", "true")
+            : locale_get(L, "keywords", "falsity·literal", "false"));
         break;
       case LUA_TNIL:
-        lua_pushliteral(L, "nil");
+        lua_pushstring(L, locale_get(L, "keywords", "null·literal", "nil"));
         break;
       default: {
         int tt = luaL_getmetafield(L, idx, "__name");  /* try name */
@@ -976,7 +1168,8 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
 ** Returns with only the table at the stack.
 */
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup, "too many upvalues");
+  luaL_checkstack(L, nup,
+    locale_get(L, "diagnostics", "too·many·upvalues", "too many upvalues"));
   for (; l->name != NULL; l++) {  /* fill the table with given functions */
     if (l->func == NULL)  /* placeholder? */
       lua_pushboolean(L, 0);
@@ -1136,7 +1329,8 @@ static void warnfcont (void *ud, const char *message, int tocont) {
 static void warnfon (void *ud, const char *message, int tocont) {
   if (checkcontrol((lua_State *)ud, message, tocont))  /* control message? */
     return;  /* nothing else to be done */
-  lua_writestringerror("%s", "Lua warning: ");  /* start a new warning */
+  lua_writestringerror("%s", locale_get((lua_State *)ud, "diagnostics",
+    "warning·prefix", "Lua warning: "));  /* start a new warning */
   warnfcont(ud, message, tocont);  /* finish processing */
 }
 
@@ -1207,9 +1401,8 @@ LUALIB_API lua_State *(luaL_newstate) (void) {
 LUALIB_API void luaL_checkversion_ (lua_State *L, lua_Number ver, size_t sz) {
   lua_Number v = lua_version(L);
   if (sz != LUAL_NUMSIZES)  /* check numeric types */
-    luaL_error(L, "core and library have incompatible numeric types");
+    luaL_error(L, "%s", locale_get(L, "diagnostics", "core·library·numeric·types·incompatible", "core·library·numeric·types·incompatible"));
   else if (v != ver)
-    luaL_error(L, "version mismatch: app. needs %f, Lua core provides %f",
+    luaL_error(L, locale_get(L, "diagnostics", "version·mismatch·app·needs·core·provides", "version·mismatch·app·needs·core·provides"),
                   (LUAI_UACNUMBER)ver, (LUAI_UACNUMBER)v);
 }
-

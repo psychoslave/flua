@@ -1,0 +1,71 @@
+local function expect_fail(src, needle)
+  local f, err = load(src)
+  assert(f == nil and type(err) == "string")
+  if needle ~= nil then
+    assert(string.find(err, needle, 1, true))
+  end
+end
+
+local function expect_ok(src)
+  local f, err = load(src)
+  assert(f ~= nil, err)
+end
+
+local function expect_print(src, expected)
+  local out = {}
+  local env = {
+    print = function(...)
+      out[#out + 1] = table.concat({...}, "\t")
+    end,
+  }
+  local f, err = load(src, "=(symbolic-sep)", "t", env)
+  assert(f ~= nil, err)
+  f()
+  assert(#out == 1 and out[1] == expected)
+end
+
+local function load_symbolic_locale()
+  local chunk = dofile("locale/symbolic·transpraxis/symbolic·transpraxis.lua")
+  if chunk == nil then
+    chunk = _G.locale
+    _G.locale = nil
+  end
+  return chunk
+end
+
+local locale = assert(load_symbolic_locale())
+local delimiters = assert(locale.delimiters)
+
+local expected = {
+  ["expression·grouping·opening"] = "【",
+  ["expression·grouping·closing"] = "】",
+  ["index·opening"] = "⟦",
+  ["index·closing"] = "⟧",
+  ["constructor·opening"] = "⁅",
+  ["constructor·closing"] = "⁆",
+  ["element·separator"] = "☙",
+  ["statement·separator"] = "❦",
+  ["string·delimiter"] = "＂",
+  ["string·delimiter·alternate"] = "＇",
+}
+
+for k, v in pairs(expected) do
+  assert(delimiters[k] == v)
+end
+assert(delimiters["string·delimiter"] ~= delimiters["string·delimiter·alternate"])
+
+-- Localized delimiters/quotes should now lex and parse.
+expect_ok("local x = 【1 + 2】")
+expect_ok("local t = ⁅1⁆; assert(t⟦1⟧ == 1)")
+expect_ok("local t = ⁅a = 1⁆")
+expect_ok("local t = ⁅1☙2⁆")
+expect_ok("local t = ⁅1☙⁆")
+expect_fail("local t = {☙2,3}")
+expect_ok("local a = 1❦ local b = 2")
+expect_ok("❦print(1)❦print(2)❦")
+expect_ok("print(1)❦")
+expect_print("❦print(＇works＇)❦", "works")
+expect_ok("local s = ＂x＂")
+expect_ok("local s = ＇x＇")
+
+print("symbolic-lexer-phase-ok")

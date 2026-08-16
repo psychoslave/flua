@@ -63,6 +63,8 @@ typedef struct Token {
    functions */
 typedef struct LexState {
   int current;  /* current character (charint) */
+  int npushed;  /* number of pushed-back bytes in lexer stream */
+  unsigned char pushed[64];  /* pushed-back bytes (LIFO) */
   int linenumber;  /* input line counter */
   int lastline;  /* line of last token 'consumed' */
   Token t;  /* current token */
@@ -81,6 +83,7 @@ typedef struct LexState {
 
 
 LUAI_FUNC void luaX_init (lua_State *L);
+LUAI_FUNC void luaX_setlocale (lua_State *L);
 LUAI_FUNC void luaX_setinput (lua_State *L, LexState *ls, ZIO *z,
                               TString *source, int firstchar);
 LUAI_FUNC TString *luaX_newstring (LexState *ls, const char *str, size_t l);
